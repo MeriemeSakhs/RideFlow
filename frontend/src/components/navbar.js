@@ -7,6 +7,7 @@ export default function Navbar() {
         <a href="/" className="text-white hover:text-spotify-green font-medium transition-colors">Start</a>
         <a href="/home" className="text-white hover:text-spotify-green font-medium transition-colors">Home</a>
         <a href="/privateUserProfile" className="text-white hover:text-spotify-green font-medium transition-colors">Profile</a>
+        <a href="/rides/new" className="text-white hover:text-spotify-green font-medium transition-colors">New Ride</a>
       </div>
     </nav>
   );

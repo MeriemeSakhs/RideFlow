@@ -7,21 +7,31 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+
     email: {
       type: String,
       required: true,
       unique: true,
     },
+
     password: {
-      required: true,
       type: String,
+      required: true,
     },
+
+    role: {
+      type: String,
+      enum: ["dispatcher", "driver", "manager"],
+      default: "dispatcher",
+    },
+
     date: {
       type: Date,
       default: Date.now,
     },
   },
+
   { collection: "users" }
 );
 
-module.exports = mongoose.model('users', userSchema)
+module.exports = mongoose.model("users", userSchema);

@@ -24,7 +24,7 @@ router.post('/editUser', async (req, res) => {
         if (err) {
             console.log(err);
         } else {
-            const accessToken = generateAccessToken(updatedUser._id, email, username)
+            const accessToken = generateAccessToken(updatedUser._id, email, username, updatedUser.role)
             res.header('Authorization', accessToken).send({ accessToken })
         }
     });

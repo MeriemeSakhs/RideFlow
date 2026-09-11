@@ -18,7 +18,7 @@ router.post('/login', async (req, res) => {
         const isPasswordValid = await bcrypt.compare(password, user.password)
         if (!isPasswordValid) return res.status(401).send({ message: "Username or password is incorrect" })
 
-        const accessToken = generateAccessToken(user._id, user.email, user.username)
+        const accessToken = generateAccessToken(user._id, user.email, user.username, user.role)
         res.header('Authorization', accessToken).send({ accessToken })
     } catch (err) {
         res.status(500).send({ message: "Internal server error" })

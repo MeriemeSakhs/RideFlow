@@ -1,3 +1,7 @@
+// Default auto-downloaded mongod (8.x) requires macOS 14+; pin a version built
+// against an older SDK so tests also run on macOS 13.
+if (!process.env.MONGOMS_VERSION) process.env.MONGOMS_VERSION = '6.0.14';
+
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const mongoose = require('mongoose');
 const express = require('express');
@@ -9,6 +13,7 @@ function buildApp() {
     app.use(express.json());
     app.use('/user', require('../routes/userLogin'));
     app.use('/user', require('../routes/userSignUp'));
+    app.use('/ride', require('../routes/rideRoutes'));
     return app;
 }
 
