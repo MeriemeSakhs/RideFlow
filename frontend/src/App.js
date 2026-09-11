@@ -11,7 +11,7 @@ import HomePage from "./components/pages/homePage";
 import Login from "./components/pages/loginPage";
 import Signup from "./components/pages/registerPage";
 import PrivateUserProfile from "./components/pages/privateUserProfilePage";
-import CreateRidePage from "./components/pages/createRidePage";
+import DispatcherDashboard from "./components/pages/dispatcherDashboardPage";
 import { createContext, useState, useEffect } from "react";
 import getUserInfo from "./utilities/decodeJwt";
 
@@ -35,7 +35,7 @@ const App = () => {
           <Route exact path="/login" element={<Login />} />
           <Route exact path="/signup" element={<Signup />} />
           <Route path="/privateUserProfile" element={<PrivateUserProfile />} />
-          <Route path="/rides/new" element={<CreateRidePage />} />
+          <Route path="/dispatcher" element={<DispatcherDashboard />} />
         </Routes>
       </UserContext.Provider>
     </>
