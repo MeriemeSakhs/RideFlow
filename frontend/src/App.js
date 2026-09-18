@@ -1,47 +1,51 @@
 import React from "react";
-// We use Route in order to define the different routes of our application
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, Navigate } from "react-router-dom";
 import './css/card.css';
 import './index.css';
 
-// We import all the components we need in our app
-import Navbar from "./components/navbar";
-import LandingPage from "./components/pages/landingPage";
-import HomePage from "./components/pages/homePage";
 import Login from "./components/pages/loginPage";
 import Signup from "./components/pages/registerPage";
-import PrivateUserProfile from "./components/pages/privateUserProfilePage";
 import DispatcherDashboard from "./components/pages/dispatcherDashboardPage";
-import { createContext, useState, useEffect } from "react";
+import DispatcherCreateRide from "./components/pages/dispatcherCreateRidePage";
+import DispatcherRideRequests from "./components/pages/dispatcherRideRequestsPage";
+import DispatcherDrivers from "./components/pages/dispatcherDriversPage";
+import DispatcherVehicles from "./components/pages/dispatcherVehiclesPage";
+import ManagerDashboard from "./components/pages/managerDashboardPage";
+import ManagerDrivers from "./components/pages/managerDriversPage";
+import ManagerVehicles from "./components/pages/managerVehiclesPage";
+import ManagerPricing from "./components/pages/managerPricingPage";
+import ManagerReports from "./components/pages/managerReportsPage";
+import RequireRole from "./components/RequireRole";
 import getUserInfo from "./utilities/decodeJwt";
 
-export const UserContext = createContext();
-//test change
-//test again
-const App = () => {
-  const [user, setUser] = useState();
-
-  useEffect(() => {
-    setUser(getUserInfo());
-  }, []);
-
-  return (
-    <>
-      <Navbar />
-      <UserContext.Provider value={user}>
-        <Routes>
-          <Route exact path="/" element={<LandingPage />} />
-          <Route exact path="/home" element={<HomePage />} />
-          <Route exact path="/login" element={<Login />} />
-          <Route exact path="/signup" element={<Signup />} />
-          <Route path="/privateUserProfile" element={<PrivateUserProfile />} />
-          <Route path="/dispatcher" element={<DispatcherDashboard />} />
-        </Routes>
-      </UserContext.Provider>
-    </>
-  );
+const RootRedirect = () => {
+  const user = getUserInfo();
+  if (!user) return <Navigate to="/login" replace />;
+  return <Navigate to={user.role === "manager" ? "/manager" : "/dispatcher"} replace />;
 };
 
+const App = () => {
+  return (
+    <Routes>
+      <Route path="/" element={<RootRedirect />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
 
+      <Route path="/dispatcher" element={<RequireRole role="dispatcher"><DispatcherDashboard /></RequireRole>} />
+      <Route path="/dispatcher/rides/new" element={<RequireRole role="dispatcher"><DispatcherCreateRide /></RequireRole>} />
+      <Route path="/dispatcher/rides" element={<RequireRole role="dispatcher"><DispatcherRideRequests /></RequireRole>} />
+      <Route path="/dispatcher/drivers" element={<RequireRole role="dispatcher"><DispatcherDrivers /></RequireRole>} />
+      <Route path="/dispatcher/vehicles" element={<RequireRole role="dispatcher"><DispatcherVehicles /></RequireRole>} />
+
+      <Route path="/manager" element={<RequireRole role="manager"><ManagerDashboard /></RequireRole>} />
+      <Route path="/manager/drivers" element={<RequireRole role="manager"><ManagerDrivers /></RequireRole>} />
+      <Route path="/manager/vehicles" element={<RequireRole role="manager"><ManagerVehicles /></RequireRole>} />
+      <Route path="/manager/pricing" element={<RequireRole role="manager"><ManagerPricing /></RequireRole>} />
+      <Route path="/manager/reports" element={<RequireRole role="manager"><ManagerReports /></RequireRole>} />
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+};
 
 export default App

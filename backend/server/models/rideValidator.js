@@ -12,6 +12,8 @@ const nameField = z.string().trim().min(1, 'Passenger name is required').max(200
 //E.164 format, e.g. +15551234567 - required for Twilio SMS delivery
 const phoneField = z.string().trim().regex(/^\+[1-9]\d{6,14}$/, 'Phone number must be in E.164 format, e.g. +15551234567')
 const vehicleTypeField = z.string().trim().min(1, 'Vehicle type is required').max(50, 'Vehicle type must be 50 characters or fewer')
+const passengerCountField = z.number({ invalid_type_error: 'Passenger count must be a number' }).int('Passenger count must be a whole number').min(1, 'Passenger count must be at least 1').max(20, 'Passenger count must be 20 or fewer')
+const notesField = z.string().trim().max(1000, 'Notes must be 1000 characters or fewer')
 
 //validates a new ride request created by a dispatcher
 const rideCreateValidation = data => {
@@ -22,6 +24,8 @@ const rideCreateValidation = data => {
     passengerName: nameField,
     passengerPhone: phoneField,
     vehicleType: vehicleTypeField,
+    passengerCount: passengerCountField,
+    notes: notesField.optional().default(''),
   }).refine(data => data.pickupLocation.toLowerCase() !== data.dropoffLocation.toLowerCase(), {
     message: 'Pickup and dropoff locations cannot be the same',
     path: ['dropoffLocation'],
@@ -42,6 +46,8 @@ const rideUpdateValidation = data => {
     passengerName: nameField.optional(),
     passengerPhone: phoneField.optional(),
     vehicleType: vehicleTypeField.optional(),
+    passengerCount: passengerCountField.optional(),
+    notes: notesField.optional(),
   }).refine(data => Object.keys(data).length > 0, {
     message: 'At least one field must be provided to update',
   }).refine(data => data.rideDate === undefined || data.rideDate.getTime() >= Date.now(), {

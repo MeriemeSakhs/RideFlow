@@ -13,7 +13,11 @@ router.post("/", requireAuth, requireRole("dispatcher"), async (req, res) => {
   if (!success) return res.status(400).send({ message: error.errors[0].message });
 
   try {
-    const ride = new Ride(data);
+    const ride = new Ride({
+      ...data,
+      companyName: req.user.companyName,
+      companySlug: req.user.companySlug,
+    });
     const savedRide = await ride.save();
     res.status(201).json(savedRide);
   } catch (error) {
@@ -21,7 +25,7 @@ router.post("/", requireAuth, requireRole("dispatcher"), async (req, res) => {
   }
 });
 
-// List rides, optionally filtered by status (?status=requested)
+// List rides for the dispatcher/manager's own company, optionally filtered by status (?status=requested)
 router.get("/", requireAuth, requireRole("dispatcher", "manager"), async (req, res) => {
   const { status } = req.query;
 
@@ -30,7 +34,7 @@ router.get("/", requireAuth, requireRole("dispatcher", "manager"), async (req, r
   }
 
   try {
-    const filter = status ? { status } : {};
+    const filter = { companySlug: req.user.companySlug, ...(status ? { status } : {}) };
     const rides = await Ride.find(filter).sort({ rideDate: -1 });
     res.json(rides);
   } catch (error) {
@@ -38,14 +42,14 @@ router.get("/", requireAuth, requireRole("dispatcher", "manager"), async (req, r
   }
 });
 
-// Retrieve a single ride
+// Retrieve a single ride belonging to the caller's company
 router.get("/:id", requireAuth, requireRole("dispatcher", "manager"), async (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
     return res.status(400).send({ message: "Invalid ride id" });
   }
 
   try {
-    const ride = await Ride.findById(req.params.id);
+    const ride = await Ride.findOne({ _id: req.params.id, companySlug: req.user.companySlug });
     if (!ride) return res.status(404).send({ message: "Ride not found" });
     res.json(ride);
   } catch (error) {
@@ -63,7 +67,7 @@ router.put("/:id", requireAuth, requireRole("dispatcher"), async (req, res) => {
   if (!success) return res.status(400).send({ message: error.errors[0].message });
 
   try {
-    const existingRide = await Ride.findById(req.params.id);
+    const existingRide = await Ride.findOne({ _id: req.params.id, companySlug: req.user.companySlug });
     if (!existingRide) return res.status(404).send({ message: "Ride not found" });
 
     if (FINAL_STATUSES.includes(existingRide.status)) {
@@ -90,7 +94,7 @@ router.patch("/:id/cancel", requireAuth, requireRole("dispatcher"), async (req, 
   }
 
   try {
-    const existingRide = await Ride.findById(req.params.id);
+    const existingRide = await Ride.findOne({ _id: req.params.id, companySlug: req.user.companySlug });
     if (!existingRide) return res.status(404).send({ message: "Ride not found" });
 
     if (existingRide.status === "cancelled") {

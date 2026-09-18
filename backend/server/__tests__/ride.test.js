@@ -11,8 +11,8 @@ beforeAll(async () => { await connect(); });
 afterAll(async () => { await disconnect(); });
 beforeEach(async () => { await clearDB(); });
 
-const makeToken = (role) => jwt.sign(
-    { id: 'test-user-id', email: 'test@example.com', username: 'testuser', role },
+const makeToken = (role, companyName = 'Acme Transport') => jwt.sign(
+    { id: 'test-user-id', email: 'test@example.com', fullName: 'Test User', role, companyName, companySlug: companyName.trim().toLowerCase() },
     process.env.ACCESS_TOKEN_SECRET,
     { expiresIn: '1h' }
 );
@@ -20,6 +20,7 @@ const makeToken = (role) => jwt.sign(
 const dispatcherAuth = { Authorization: `Bearer ${makeToken('dispatcher')}` };
 const managerAuth = { Authorization: `Bearer ${makeToken('manager')}` };
 const driverAuth = { Authorization: `Bearer ${makeToken('driver')}` };
+const otherCompanyDispatcherAuth = { Authorization: `Bearer ${makeToken('dispatcher', 'Beacon Rides')}` };
 
 const validRide = {
     pickupLocation: '123 Main St, Salem, MA',
@@ -28,6 +29,8 @@ const validRide = {
     passengerName: 'Jane Doe',
     passengerPhone: '+15551234567',
     vehicleType: 'sedan',
+    passengerCount: 2,
+    notes: 'Extra luggage',
 };
 
 describe('Ride route authentication and authorization', () => {
@@ -75,6 +78,8 @@ describe('POST /ride', () => {
         expect(res.body.status).toBe('requested');
         expect(res.body.pickupLocation).toBe(validRide.pickupLocation);
         expect(res.body.assignedDriver).toBeNull();
+        expect(res.body.companyName).toBe('Acme Transport');
+        expect(res.body.companySlug).toBe('acme transport');
     });
 
     test('rejects a request missing pickupLocation', async () => {
@@ -124,6 +129,39 @@ describe('POST /ride', () => {
     test('rejects a pickupLocation over 200 characters', async () => {
         const res = await request(app).post('/ride').set(dispatcherAuth).send({ ...validRide, pickupLocation: 'a'.repeat(201) });
         expect(res.status).toBe(400);
+    });
+
+    test('rejects a request missing passengerCount', async () => {
+        const { passengerCount, ...incomplete } = validRide;
+        const res = await request(app).post('/ride').set(dispatcherAuth).send(incomplete);
+        expect(res.status).toBe(400);
+    });
+
+    test('rejects a passengerCount of 0', async () => {
+        const res = await request(app).post('/ride').set(dispatcherAuth).send({ ...validRide, passengerCount: 0 });
+        expect(res.status).toBe(400);
+    });
+
+    test('rejects a negative passengerCount', async () => {
+        const res = await request(app).post('/ride').set(dispatcherAuth).send({ ...validRide, passengerCount: -1 });
+        expect(res.status).toBe(400);
+    });
+
+    test('rejects a non-integer passengerCount', async () => {
+        const res = await request(app).post('/ride').set(dispatcherAuth).send({ ...validRide, passengerCount: 2.5 });
+        expect(res.status).toBe(400);
+    });
+
+    test('rejects a passengerCount over 20', async () => {
+        const res = await request(app).post('/ride').set(dispatcherAuth).send({ ...validRide, passengerCount: 21 });
+        expect(res.status).toBe(400);
+    });
+
+    test('defaults notes to an empty string when omitted', async () => {
+        const { notes, ...withoutNotes } = validRide;
+        const res = await request(app).post('/ride').set(dispatcherAuth).send(withoutNotes);
+        expect(res.status).toBe(201);
+        expect(res.body.notes).toBe('');
     });
 
     test('ignores an attempt to set status directly on create', async () => {
@@ -198,6 +236,21 @@ describe('PUT /ride/:id', () => {
         expect(res.status).toBe(400);
     });
 
+    test('does not wipe notes when updating an unrelated field', async () => {
+        const created = await request(app).post('/ride').set(dispatcherAuth).send(validRide);
+        const res = await request(app).put(`/ride/${created.body._id}`).set(dispatcherAuth).send({ passengerName: 'Updated Name' });
+        expect(res.status).toBe(200);
+        expect(res.body.notes).toBe(validRide.notes);
+    });
+
+    test('updates passengerCount and notes', async () => {
+        const created = await request(app).post('/ride').set(dispatcherAuth).send(validRide);
+        const res = await request(app).put(`/ride/${created.body._id}`).set(dispatcherAuth).send({ passengerCount: 4, notes: 'Updated notes' });
+        expect(res.status).toBe(200);
+        expect(res.body.passengerCount).toBe(4);
+        expect(res.body.notes).toBe('Updated notes');
+    });
+
     test('rejects an update that makes pickup and dropoff identical', async () => {
         const created = await request(app).post('/ride').set(dispatcherAuth).send(validRide);
         const res = await request(app).put(`/ride/${created.body._id}`).set(dispatcherAuth).send({
@@ -259,5 +312,38 @@ describe('PATCH /ride/:id/cancel', () => {
 
         const res = await request(app).patch(`/ride/${created.body._id}/cancel`).set(dispatcherAuth);
         expect(res.status).toBe(409);
+    });
+});
+
+describe('Company data isolation', () => {
+    test('a dispatcher only sees rides belonging to their own company in the list', async () => {
+        await request(app).post('/ride').set(dispatcherAuth).send(validRide);
+        await request(app).post('/ride').set(otherCompanyDispatcherAuth).send(validRide);
+
+        const acmeRides = await request(app).get('/ride').set(dispatcherAuth);
+        expect(acmeRides.body.length).toBe(1);
+        expect(acmeRides.body[0].companyName).toBe('Acme Transport');
+
+        const beaconRides = await request(app).get('/ride').set(otherCompanyDispatcherAuth);
+        expect(beaconRides.body.length).toBe(1);
+        expect(beaconRides.body[0].companyName).toBe('Beacon Rides');
+    });
+
+    test('a dispatcher cannot fetch another company\'s ride by id (404, not 403)', async () => {
+        const created = await request(app).post('/ride').set(dispatcherAuth).send(validRide);
+        const res = await request(app).get(`/ride/${created.body._id}`).set(otherCompanyDispatcherAuth);
+        expect(res.status).toBe(404);
+    });
+
+    test('a dispatcher cannot update another company\'s ride', async () => {
+        const created = await request(app).post('/ride').set(dispatcherAuth).send(validRide);
+        const res = await request(app).put(`/ride/${created.body._id}`).set(otherCompanyDispatcherAuth).send({ passengerName: 'Hijacked' });
+        expect(res.status).toBe(404);
+    });
+
+    test('a dispatcher cannot cancel another company\'s ride', async () => {
+        const created = await request(app).post('/ride').set(dispatcherAuth).send(validRide);
+        const res = await request(app).patch(`/ride/${created.body._id}/cancel`).set(otherCompanyDispatcherAuth);
+        expect(res.status).toBe(404);
     });
 });
