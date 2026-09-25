@@ -12,7 +12,7 @@ import mockDrivers from "../../mockData/mockDrivers";
 // state (seeded from mockData/mockDrivers.js) and is lost on refresh. Swap
 // the seed + these handlers for real API calls when that work is due.
 const emptyDriverForm = { name: "", email: "", phone: "", vehicleType: "Sedan", status: "available" };
-const inputClass = "w-full px-4 py-2 rounded-md border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500";
+const inputClass = "w-full px-4 py-2 rounded-md border border-rideflow-navy/20 text-rideflow-navy focus:outline-none focus:ring-2 focus:ring-rideflow-orange focus:border-rideflow-orange";
 
 const ManagerDrivers = () => {
   const [user, setUser] = useState(undefined);
@@ -68,11 +68,11 @@ const ManagerDrivers = () => {
   return (
     <PortalLayout portalTitle="Manager Portal" portalSubtitle="Monitor operations and view analytics" navItems={MANAGER_NAV_ITEMS} user={user}>
       <div className="flex items-center justify-between mb-6">
-        <p className="text-sm text-slate-500">Manage your fleet drivers</p>
+        <p className="text-sm text-rideflow-navy/60">Manage your fleet drivers</p>
         <button
           type="button"
           onClick={openAdd}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-rideflow-orange hover:bg-rideflow-orange-hover text-white font-semibold text-sm shadow-sm transition-colors"
         >
           <Plus size={16} /> Add New Driver
         </button>
@@ -83,19 +83,19 @@ const ManagerDrivers = () => {
       <Modal open={!!modalMode} onClose={closeModal} title={modalMode === "add" ? "Add New Driver" : "Edit Driver"}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">Full Name</label>
+            <label className="block text-sm font-semibold text-rideflow-navy mb-1">Full Name</label>
             <input type="text" name="name" value={formData.name} onChange={handleChange} className={inputClass} />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">Email</label>
+            <label className="block text-sm font-semibold text-rideflow-navy mb-1">Email</label>
             <input type="email" name="email" value={formData.email} onChange={handleChange} className={inputClass} />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">Phone</label>
+            <label className="block text-sm font-semibold text-rideflow-navy mb-1">Phone</label>
             <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className={inputClass} />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">Vehicle Type</label>
+            <label className="block text-sm font-semibold text-rideflow-navy mb-1">Vehicle Type</label>
             <select name="vehicleType" value={formData.vehicleType} onChange={handleChange} className={inputClass}>
               <option>Sedan</option>
               <option>SUV</option>
@@ -104,7 +104,7 @@ const ManagerDrivers = () => {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">Status</label>
+            <label className="block text-sm font-semibold text-rideflow-navy mb-1">Status</label>
             <select name="status" value={formData.status} onChange={handleChange} className={inputClass}>
               <option value="available">Available</option>
               <option value="busy">Busy</option>
@@ -112,7 +112,7 @@ const ManagerDrivers = () => {
             </select>
           </div>
           {formError && <p className="text-red-600 text-sm">{formError}</p>}
-          <button type="submit" className="w-full py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition-colors shadow-sm">
+          <button type="submit" className="w-full py-2.5 rounded-lg bg-rideflow-orange hover:bg-rideflow-orange-hover text-white font-semibold transition-colors shadow-sm">
             {modalMode === "add" ? "Add Driver" : "Save Changes"}
           </button>
         </form>

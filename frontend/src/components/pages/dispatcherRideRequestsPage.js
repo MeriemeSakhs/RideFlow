@@ -141,9 +141,9 @@ const DispatcherRideRequests = () => {
       navItems={DISPATCHER_NAV_ITEMS}
       user={user}
     >
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between flex-wrap gap-3">
-          <h2 className="text-lg font-bold text-slate-900">Ride Requests</h2>
+      <div className="bg-white rounded-xl border border-black/5 overflow-hidden">
+        <div className="px-5 py-4 border-b border-black/5 flex items-center justify-between flex-wrap gap-3">
+          <h2 className="text-lg font-bold text-rideflow-navy">Ride Requests</h2>
           <div className="flex items-center gap-2 flex-wrap">
             {STATUS_FILTERS.map((status) => (
               <button
@@ -151,7 +151,7 @@ const DispatcherRideRequests = () => {
                 type="button"
                 onClick={() => setStatusFilter(status)}
                 className={`text-xs font-semibold px-3 py-1.5 rounded-full capitalize transition-colors ${
-                  statusFilter === status ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  statusFilter === status ? "bg-rideflow-orange text-white" : "bg-rideflow-gray/60 text-rideflow-navy/70 hover:bg-rideflow-gray/70"
                 }`}
               >
                 {status}
@@ -160,17 +160,17 @@ const DispatcherRideRequests = () => {
           </div>
         </div>
 
-        {isLoading && <p className="text-slate-500 px-5 py-6">Loading ride requests...</p>}
+        {isLoading && <p className="text-rideflow-navy/60 px-5 py-6">Loading ride requests...</p>}
         {!isLoading && listError && <p className="text-red-600 text-sm px-5 py-6">{listError}</p>}
         {!isLoading && !listError && visibleRides.length === 0 && (
-          <p className="text-slate-400 px-5 py-6">No ride requests match this filter.</p>
+          <p className="text-rideflow-navy/40 px-5 py-6">No ride requests match this filter.</p>
         )}
 
         {!isLoading && !listError && visibleRides.length > 0 && (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs text-slate-400 uppercase border-b border-slate-100">
+                <tr className="text-left text-xs text-rideflow-navy/40 uppercase border-b border-black/5">
                   <th className="px-5 py-2 font-semibold">Passenger</th>
                   <th className="px-5 py-2 font-semibold">Pickup</th>
                   <th className="px-5 py-2 font-semibold">Drop-off</th>
@@ -184,12 +184,12 @@ const DispatcherRideRequests = () => {
                 {visibleRides.map((ride) => {
                   const isFinal = !CANCELLABLE_STATUSES.includes(ride.status);
                   return (
-                    <tr key={ride._id} className="border-b border-slate-50 last:border-0 align-top">
-                      <td className="px-5 py-3 text-slate-900 font-medium">{ride.passengerName}</td>
-                      <td className="px-5 py-3 text-slate-700">{ride.pickupLocation}</td>
-                      <td className="px-5 py-3 text-slate-700">{ride.dropoffLocation}</td>
-                      <td className="px-5 py-3 text-slate-500">{formatDisplayDate(ride.rideDate)}</td>
-                      <td className="px-5 py-3 text-slate-700 capitalize">{ride.vehicleType}</td>
+                    <tr key={ride._id} className="border-b border-black/5 last:border-0 align-top">
+                      <td className="px-5 py-3 text-rideflow-navy font-medium">{ride.passengerName}</td>
+                      <td className="px-5 py-3 text-rideflow-navy">{ride.pickupLocation}</td>
+                      <td className="px-5 py-3 text-rideflow-navy">{ride.dropoffLocation}</td>
+                      <td className="px-5 py-3 text-rideflow-navy/60">{formatDisplayDate(ride.rideDate)}</td>
+                      <td className="px-5 py-3 text-rideflow-navy capitalize">{ride.vehicleType}</td>
                       <td className="px-5 py-3"><StatusBadge status={ride.status} styles={STATUS_STYLES} /></td>
                       <td className="px-5 py-3">
                         <div className="flex gap-3">
@@ -197,7 +197,7 @@ const DispatcherRideRequests = () => {
                             type="button"
                             onClick={() => openEdit(ride)}
                             disabled={isFinal}
-                            className="text-indigo-600 hover:text-indigo-700 font-semibold disabled:text-slate-300 disabled:cursor-not-allowed"
+                            className="text-rideflow-orange hover:text-rideflow-orange-hover font-semibold disabled:text-rideflow-navy/25 disabled:cursor-not-allowed"
                           >
                             Edit
                           </button>
@@ -205,7 +205,7 @@ const DispatcherRideRequests = () => {
                             type="button"
                             onClick={() => handleCancelRide(ride)}
                             disabled={isFinal || cancellingId === ride._id}
-                            className="text-red-600 hover:text-red-700 font-semibold disabled:text-slate-300 disabled:cursor-not-allowed"
+                            className="text-red-600 hover:text-red-700 font-semibold disabled:text-rideflow-navy/25 disabled:cursor-not-allowed"
                           >
                             {cancellingId === ride._id ? "Cancelling..." : "Cancel"}
                           </button>
@@ -229,14 +229,14 @@ const DispatcherRideRequests = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-semibold transition-colors shadow-sm"
+              className="flex-1 py-2.5 rounded-lg bg-rideflow-orange hover:bg-rideflow-orange-hover disabled:opacity-50 text-white font-semibold transition-colors shadow-sm"
             >
               {isSubmitting ? "Saving..." : "Save Changes"}
             </button>
             <button
               type="button"
               onClick={closeEdit}
-              className="px-6 py-2.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors font-semibold"
+              className="px-6 py-2.5 rounded-lg border border-rideflow-navy/20 text-rideflow-navy hover:bg-rideflow-gray/40 transition-colors font-semibold"
             >
               Cancel
             </button>

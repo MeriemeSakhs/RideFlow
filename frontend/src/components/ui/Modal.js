@@ -9,9 +9,9 @@ const Modal = ({ open, onClose, title, children }) => {
         className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-          <h3 className="text-lg font-bold text-slate-900">{title}</h3>
-          <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600" aria-label="Close">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-black/5">
+          <h3 className="text-lg font-bold text-rideflow-navy">{title}</h3>
+          <button type="button" onClick={onClose} className="text-rideflow-navy/40 hover:text-rideflow-navy" aria-label="Close">
             <X size={20} />
           </button>
         </div>

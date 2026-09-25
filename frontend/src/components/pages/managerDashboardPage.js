@@ -60,28 +60,28 @@ const ManagerDashboard = () => {
 
   return (
     <PortalLayout portalTitle="Manager Portal" portalSubtitle="Monitor operations and view analytics" navItems={MANAGER_NAV_ITEMS} user={user}>
-      {isLoading && <p className="text-slate-500">Loading dashboard...</p>}
+      {isLoading && <p className="text-rideflow-navy/60">Loading dashboard...</p>}
       {!isLoading && error && <p className="text-red-600 text-sm mb-4">{error}</p>}
 
       {!isLoading && !error && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard icon={ClipboardList} label="Total Rides" value={totalRides} iconBg="bg-indigo-100" iconColor="text-indigo-600" />
+            <StatCard icon={ClipboardList} label="Total Rides" value={totalRides} iconBg="bg-rideflow-orange/10" iconColor="text-rideflow-orange" />
             <StatCard icon={CheckCircle2} label="Completed Rides" value={completedRides.length} trend={`${completionRate}% completion rate`} iconBg="bg-emerald-100" iconColor="text-emerald-600" />
             <StatCard icon={XCircle} label="Cancelled Rides" value={cancelledRides.length} trend={`${cancellationRate}% cancellation rate`} iconBg="bg-red-100" iconColor="text-red-600" />
             <StatCard icon={DollarSign} label="Total Revenue" value={`$${mockManagerSummary.totalRevenue.toLocaleString()}`} trend={`+${mockManagerSummary.totalRevenueTrendPct}%`} iconBg="bg-blue-100" iconColor="text-blue-600" />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard icon={Users} label="Active Drivers" value={mockManagerSummary.activeDrivers} trend={`out of ${mockManagerSummary.totalDrivers} total`} iconBg="bg-indigo-100" iconColor="text-indigo-600" />
+            <StatCard icon={Users} label="Active Drivers" value={mockManagerSummary.activeDrivers} trend={`out of ${mockManagerSummary.totalDrivers} total`} iconBg="bg-rideflow-orange/10" iconColor="text-rideflow-orange" />
             <StatCard icon={Car} label="Fleet Size" value={mockManagerSummary.fleetSize} trend={`${mockManagerSummary.activeVehicles} active, ${mockManagerSummary.maintenanceVehicles} maintenance`} iconBg="bg-blue-100" iconColor="text-blue-600" />
             <StatCard icon={Gauge} label="Fleet Utilization" value={`${mockManagerSummary.fleetUtilizationPct}%`} iconBg="bg-emerald-100" iconColor="text-emerald-600" />
             <StatCard icon={Star} label="Avg Rating" value={mockManagerSummary.avgRating} trend={`Based on ${mockManagerSummary.totalReviews.toLocaleString()} reviews`} iconBg="bg-amber-100" iconColor="text-amber-600" />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl border border-slate-200 p-5">
-              <h3 className="font-bold text-slate-900 mb-4">Revenue Overview</h3>
+            <div className="bg-white rounded-xl border border-black/5 p-5">
+              <h3 className="font-bold text-rideflow-navy mb-4">Revenue Overview</h3>
               <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={mockRevenueTrend}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -93,8 +93,8 @@ const ManagerDashboard = () => {
               </ResponsiveContainer>
             </div>
 
-            <div className="bg-white rounded-xl border border-slate-200 p-5">
-              <h3 className="font-bold text-slate-900 mb-4">Daily Rides (This Week)</h3>
+            <div className="bg-white rounded-xl border border-black/5 p-5">
+              <h3 className="font-bold text-rideflow-navy mb-4">Daily Rides (This Week)</h3>
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={mockDailyRides}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -106,8 +106,8 @@ const ManagerDashboard = () => {
               </ResponsiveContainer>
             </div>
 
-            <div className="bg-white rounded-xl border border-slate-200 p-5">
-              <h3 className="font-bold text-slate-900 mb-4">Vehicle Type Utilization</h3>
+            <div className="bg-white rounded-xl border border-black/5 p-5">
+              <h3 className="font-bold text-rideflow-navy mb-4">Vehicle Type Utilization</h3>
               <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
                   <Pie data={mockVehicleUtilization} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={(entry) => `${entry.name}: ${entry.value}%`}>
@@ -118,34 +118,34 @@ const ManagerDashboard = () => {
               </ResponsiveContainer>
             </div>
 
-            <div className="bg-white rounded-xl border border-slate-200 p-5">
-              <h3 className="font-bold text-slate-900 mb-4">Top Performing Drivers</h3>
+            <div className="bg-white rounded-xl border border-black/5 p-5">
+              <h3 className="font-bold text-rideflow-navy mb-4">Top Performing Drivers</h3>
               <div className="space-y-3">
                 {mockTopDrivers.map((driver, i) => (
                   <div key={driver.name} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <span className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center">{i + 1}</span>
+                      <span className="w-6 h-6 rounded-full bg-rideflow-orange/10 text-rideflow-orange text-xs font-bold flex items-center justify-center">{i + 1}</span>
                       <div>
-                        <p className="text-sm font-semibold text-slate-900">{driver.name}</p>
-                        <p className="text-xs text-slate-500">{driver.rides} rides</p>
+                        <p className="text-sm font-semibold text-rideflow-navy">{driver.name}</p>
+                        <p className="text-xs text-rideflow-navy/60">{driver.rides} rides</p>
                       </div>
                     </div>
-                    <p className="text-sm font-semibold text-slate-900">${driver.revenue.toLocaleString()}</p>
+                    <p className="text-sm font-semibold text-rideflow-navy">${driver.revenue.toLocaleString()}</p>
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100"><h3 className="font-bold text-slate-900">Active Rides</h3></div>
+          <div className="bg-white rounded-xl border border-black/5 overflow-hidden">
+            <div className="px-5 py-4 border-b border-black/5"><h3 className="font-bold text-rideflow-navy">Active Rides</h3></div>
             {activeRides.length === 0 ? (
-              <p className="text-slate-400 text-sm px-5 py-6">No active rides right now</p>
+              <p className="text-rideflow-navy/40 text-sm px-5 py-6">No active rides right now</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-xs text-slate-400 uppercase border-b border-slate-100">
+                    <tr className="text-left text-xs text-rideflow-navy/40 uppercase border-b border-black/5">
                       <th className="px-5 py-2 font-semibold">Driver</th>
                       <th className="px-5 py-2 font-semibold">Pickup Location</th>
                       <th className="px-5 py-2 font-semibold">Drop-off Location</th>
@@ -156,13 +156,13 @@ const ManagerDashboard = () => {
                   </thead>
                   <tbody>
                     {activeRides.map((ride) => (
-                      <tr key={ride._id} className="border-b border-slate-50 last:border-0">
-                        <td className="px-5 py-3 text-slate-700">Unassigned</td>
-                        <td className="px-5 py-3 text-slate-700">{ride.pickupLocation}</td>
-                        <td className="px-5 py-3 text-slate-700">{ride.dropoffLocation}</td>
-                        <td className="px-5 py-3 text-slate-700">{ride.passengerCount}</td>
-                        <td className="px-5 py-3 text-slate-500">{formatDisplayDate(ride.rideDate)}</td>
-                        <td className="px-5 py-3 text-slate-700">${ride.price?.toFixed(2) ?? "0.00"}</td>
+                      <tr key={ride._id} className="border-b border-black/5 last:border-0">
+                        <td className="px-5 py-3 text-rideflow-navy">Unassigned</td>
+                        <td className="px-5 py-3 text-rideflow-navy">{ride.pickupLocation}</td>
+                        <td className="px-5 py-3 text-rideflow-navy">{ride.dropoffLocation}</td>
+                        <td className="px-5 py-3 text-rideflow-navy">{ride.passengerCount}</td>
+                        <td className="px-5 py-3 text-rideflow-navy/60">{formatDisplayDate(ride.rideDate)}</td>
+                        <td className="px-5 py-3 text-rideflow-navy">${ride.price?.toFixed(2) ?? "0.00"}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -171,15 +171,15 @@ const ManagerDashboard = () => {
             )}
           </div>
 
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100"><h3 className="font-bold text-slate-900">Recent Completed Rides</h3></div>
+          <div className="bg-white rounded-xl border border-black/5 overflow-hidden">
+            <div className="px-5 py-4 border-b border-black/5"><h3 className="font-bold text-rideflow-navy">Recent Completed Rides</h3></div>
             {completedRides.length === 0 ? (
-              <p className="text-slate-400 text-sm px-5 py-6">No completed rides yet</p>
+              <p className="text-rideflow-navy/40 text-sm px-5 py-6">No completed rides yet</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-xs text-slate-400 uppercase border-b border-slate-100">
+                    <tr className="text-left text-xs text-rideflow-navy/40 uppercase border-b border-black/5">
                       <th className="px-5 py-2 font-semibold">Driver</th>
                       <th className="px-5 py-2 font-semibold">Route</th>
                       <th className="px-5 py-2 font-semibold">Date</th>
@@ -189,12 +189,12 @@ const ManagerDashboard = () => {
                   </thead>
                   <tbody>
                     {completedRides.slice(0, 5).map((ride) => (
-                      <tr key={ride._id} className="border-b border-slate-50 last:border-0">
-                        <td className="px-5 py-3 text-slate-700">Unassigned</td>
-                        <td className="px-5 py-3 text-slate-700">{ride.pickupLocation} &rarr; {ride.dropoffLocation}</td>
-                        <td className="px-5 py-3 text-slate-500">{formatDisplayDate(ride.rideDate)}</td>
+                      <tr key={ride._id} className="border-b border-black/5 last:border-0">
+                        <td className="px-5 py-3 text-rideflow-navy">Unassigned</td>
+                        <td className="px-5 py-3 text-rideflow-navy">{ride.pickupLocation} &rarr; {ride.dropoffLocation}</td>
+                        <td className="px-5 py-3 text-rideflow-navy/60">{formatDisplayDate(ride.rideDate)}</td>
                         <td className="px-5 py-3"><StatusBadge status={ride.status} styles={STATUS_STYLES} /></td>
-                        <td className="px-5 py-3 text-slate-700">${ride.price?.toFixed(2) ?? "0.00"}</td>
+                        <td className="px-5 py-3 text-rideflow-navy">${ride.price?.toFixed(2) ?? "0.00"}</td>
                       </tr>
                     ))}
                   </tbody>

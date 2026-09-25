@@ -20,20 +20,20 @@ const VehiclesTable = ({ vehicles, onSelect, selectLabel = "View Details" }) => 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={Car} label="Total Vehicles" value={vehicles.length} iconBg="bg-indigo-100" iconColor="text-indigo-600" />
+        <StatCard icon={Car} label="Total Vehicles" value={vehicles.length} iconBg="bg-rideflow-orange/10" iconColor="text-rideflow-orange" />
         <StatCard icon={CheckCircle2} label="Active" value={activeCount} iconBg="bg-emerald-100" iconColor="text-emerald-600" />
         <StatCard icon={Wrench} label="Maintenance" value={maintenanceCount} iconBg="bg-amber-100" iconColor="text-amber-600" />
         <StatCard icon={Gauge} label="Avg Mileage" value={`${(avgMileage / 1000).toFixed(1)}K`} iconBg="bg-blue-100" iconColor="text-blue-600" />
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-100">
-          <h3 className="font-bold text-slate-900">All Vehicles</h3>
+      <div className="bg-white rounded-xl border border-black/5 overflow-hidden">
+        <div className="px-5 py-4 border-b border-black/5">
+          <h3 className="font-bold text-rideflow-navy">All Vehicles</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs text-slate-400 uppercase border-b border-slate-100">
+              <tr className="text-left text-xs text-rideflow-navy/40 uppercase border-b border-black/5">
                 <th className="px-5 py-2 font-semibold">Vehicle ID</th>
                 <th className="px-5 py-2 font-semibold">Type</th>
                 <th className="px-5 py-2 font-semibold">Make &amp; Model</th>
@@ -46,19 +46,19 @@ const VehiclesTable = ({ vehicles, onSelect, selectLabel = "View Details" }) => 
             </thead>
             <tbody>
               {vehicles.map((vehicle) => (
-                <tr key={vehicle.id} className="border-b border-slate-50 last:border-0">
-                  <td className="px-5 py-3 font-semibold text-indigo-600">{vehicle.id}</td>
-                  <td className="px-5 py-3 text-slate-700">{vehicle.type}</td>
-                  <td className="px-5 py-3 text-slate-700">{vehicle.makeModel}</td>
-                  <td className="px-5 py-3 text-slate-700">{vehicle.licensePlate}</td>
-                  <td className="px-5 py-3 text-slate-700">{vehicle.assignedDriver || "—"}</td>
-                  <td className="px-5 py-3 text-slate-700">{vehicle.mileage.toLocaleString()} mi</td>
+                <tr key={vehicle.id} className="border-b border-black/5 last:border-0">
+                  <td className="px-5 py-3 font-semibold text-rideflow-orange">{vehicle.id}</td>
+                  <td className="px-5 py-3 text-rideflow-navy">{vehicle.type}</td>
+                  <td className="px-5 py-3 text-rideflow-navy">{vehicle.makeModel}</td>
+                  <td className="px-5 py-3 text-rideflow-navy">{vehicle.licensePlate}</td>
+                  <td className="px-5 py-3 text-rideflow-navy">{vehicle.assignedDriver || "—"}</td>
+                  <td className="px-5 py-3 text-rideflow-navy">{vehicle.mileage.toLocaleString()} mi</td>
                   <td className="px-5 py-3"><StatusBadge status={vehicle.status} styles={STATUS_STYLES} /></td>
                   <td className="px-5 py-3">
                     <button
                       type="button"
                       onClick={() => onSelect && onSelect(vehicle)}
-                      className="text-indigo-600 hover:text-indigo-700 font-semibold"
+                      className="text-rideflow-orange hover:text-rideflow-orange-hover font-semibold"
                     >
                       {selectLabel}
                     </button>

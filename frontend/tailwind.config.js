@@ -15,6 +15,17 @@ module.exports = {
           hover:   '#333333',
           muted:   '#B3B3B3',
         },
+        // RideFlow brand palette (marketing site) - see components/landing/
+        rideflow: {
+          navy: '#172643',
+          'navy-light': '#22335a',
+          orange: '#FFA313',
+          'orange-hover': '#e6920a',
+          gray: '#E5E5E5',
+        },
+      },
+      fontFamily: {
+        sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
       },
     },
   },

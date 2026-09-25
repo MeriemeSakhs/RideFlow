@@ -3,6 +3,7 @@ import { Route, Routes, Navigate } from "react-router-dom";
 import './css/card.css';
 import './index.css';
 
+import LandingPage from "./components/pages/landingPage";
 import Login from "./components/pages/loginPage";
 import Signup from "./components/pages/registerPage";
 import DispatcherDashboard from "./components/pages/dispatcherDashboardPage";
@@ -18,16 +19,16 @@ import ManagerReports from "./components/pages/managerReportsPage";
 import RequireRole from "./components/RequireRole";
 import getUserInfo from "./utilities/decodeJwt";
 
-const RootRedirect = () => {
+const RootRoute = () => {
   const user = getUserInfo();
-  if (!user) return <Navigate to="/login" replace />;
-  return <Navigate to={user.role === "manager" ? "/manager" : "/dispatcher"} replace />;
+  if (user) return <Navigate to={user.role === "manager" ? "/manager" : "/dispatcher"} replace />;
+  return <LandingPage />;
 };
 
 const App = () => {
   return (
     <Routes>
-      <Route path="/" element={<RootRedirect />} />
+      <Route path="/" element={<RootRoute />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
 

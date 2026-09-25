@@ -33,19 +33,19 @@ const isToday = (isoString) => {
 };
 
 const RideTable = ({ title, icon: Icon, iconColor, rides, showAssign, onAssign }) => (
-  <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-    <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
+  <div className="bg-white rounded-xl border border-black/5 overflow-hidden">
+    <div className="px-5 py-4 border-b border-black/5 flex items-center gap-2">
       <Icon size={16} className={iconColor} />
-      <h3 className="font-bold text-slate-900">{title}</h3>
-      <span className="text-xs text-slate-400">({rides.length})</span>
+      <h3 className="font-bold text-rideflow-navy">{title}</h3>
+      <span className="text-xs text-rideflow-navy/40">({rides.length})</span>
     </div>
     {rides.length === 0 ? (
-      <p className="text-slate-400 text-sm px-5 py-6">None right now</p>
+      <p className="text-rideflow-navy/40 text-sm px-5 py-6">None right now</p>
     ) : (
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-xs text-slate-400 uppercase border-b border-slate-100">
+            <tr className="text-left text-xs text-rideflow-navy/40 uppercase border-b border-black/5">
               <th className="px-5 py-2 font-semibold">Pickup</th>
               <th className="px-5 py-2 font-semibold">Drop-off</th>
               <th className="px-5 py-2 font-semibold">Status</th>
@@ -56,18 +56,18 @@ const RideTable = ({ title, icon: Icon, iconColor, rides, showAssign, onAssign }
           </thead>
           <tbody>
             {rides.map((ride) => (
-              <tr key={ride._id} className="border-b border-slate-50 last:border-0">
-                <td className="px-5 py-3 text-slate-700">{ride.pickupLocation}</td>
-                <td className="px-5 py-3 text-slate-700">{ride.dropoffLocation}</td>
+              <tr key={ride._id} className="border-b border-black/5 last:border-0">
+                <td className="px-5 py-3 text-rideflow-navy">{ride.pickupLocation}</td>
+                <td className="px-5 py-3 text-rideflow-navy">{ride.dropoffLocation}</td>
                 <td className="px-5 py-3"><StatusBadge status={ride.status} styles={STATUS_STYLES} /></td>
-                <td className="px-5 py-3 text-slate-500">{formatDisplayDate(ride.rideDate)}</td>
-                <td className="px-5 py-3 text-slate-700">${ride.price?.toFixed(2) ?? "0.00"}</td>
+                <td className="px-5 py-3 text-rideflow-navy/60">{formatDisplayDate(ride.rideDate)}</td>
+                <td className="px-5 py-3 text-rideflow-navy">${ride.price?.toFixed(2) ?? "0.00"}</td>
                 {showAssign && (
                   <td className="px-5 py-3">
                     <button
                       type="button"
                       onClick={() => onAssign(ride)}
-                      className="text-indigo-600 hover:text-indigo-700 font-semibold"
+                      className="text-rideflow-orange hover:text-rideflow-orange-hover font-semibold"
                     >
                       Assign Driver
                     </button>
@@ -132,19 +132,19 @@ const DispatcherDashboard = () => {
         <div />
         <Link
           to="/dispatcher/rides/new"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-rideflow-orange hover:bg-rideflow-orange-hover text-white font-semibold text-sm shadow-sm transition-colors"
         >
           <Plus size={16} /> Create New Ride Request
         </Link>
       </div>
 
-      {isLoading && <p className="text-slate-500">Loading dashboard...</p>}
+      {isLoading && <p className="text-rideflow-navy/60">Loading dashboard...</p>}
       {!isLoading && error && <p className="text-red-600 text-sm mb-4">{error}</p>}
 
       {!isLoading && !error && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard icon={ClipboardList} label="Total Rides Today" value={todaysRides.length} iconBg="bg-indigo-100" iconColor="text-indigo-600" />
+            <StatCard icon={ClipboardList} label="Total Rides Today" value={todaysRides.length} iconBg="bg-rideflow-orange/10" iconColor="text-rideflow-orange" />
             <StatCard icon={Circle} label="Active Rides" value={active.length} iconBg="bg-blue-100" iconColor="text-blue-600" />
             <StatCard icon={Clock} label="Pending Rides" value={pending.length} iconBg="bg-amber-100" iconColor="text-amber-600" />
             <StatCard icon={CheckCircle2} label="Completed Today" value={completed.length} iconBg="bg-emerald-100" iconColor="text-emerald-600" />
@@ -159,7 +159,7 @@ const DispatcherDashboard = () => {
       <Modal open={!!assigningRide} onClose={() => setAssigningRide(null)} title="Assign Driver">
         {assigningRide && (
           <div className="space-y-4">
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-rideflow-navy/60">
               {assigningRide.pickupLocation} &rarr; {assigningRide.dropoffLocation}
             </p>
 
@@ -169,7 +169,7 @@ const DispatcherDashboard = () => {
             </p>
 
             {availableMockDrivers.length === 0 ? (
-              <p className="text-slate-500 text-sm">No available drivers.</p>
+              <p className="text-rideflow-navy/60 text-sm">No available drivers.</p>
             ) : (
               <div className="space-y-2">
                 {availableMockDrivers.map((driver) => (
@@ -177,14 +177,14 @@ const DispatcherDashboard = () => {
                     key={driver.id}
                     type="button"
                     onClick={() => setAssignConfirmation(`${driver.name} selected for this ride (preview only).`)}
-                    className="w-full flex items-center gap-3 border border-slate-200 rounded-lg px-3 py-2.5 hover:border-indigo-400 hover:bg-indigo-50 transition-colors text-left"
+                    className="w-full flex items-center gap-3 border border-black/5 rounded-lg px-3 py-2.5 hover:border-rideflow-orange/40 hover:bg-rideflow-orange/10 transition-colors text-left"
                   >
-                    <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-rideflow-orange/10 text-rideflow-orange flex items-center justify-center shrink-0">
                       <User size={16} />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-slate-900">{driver.name}</p>
-                      <p className="text-xs text-slate-500">{driver.vehicleType} &middot; {driver.totalRides} rides</p>
+                      <p className="text-sm font-semibold text-rideflow-navy">{driver.name}</p>
+                      <p className="text-xs text-rideflow-navy/60">{driver.vehicleType} &middot; {driver.totalRides} rides</p>
                     </div>
                   </button>
                 ))}

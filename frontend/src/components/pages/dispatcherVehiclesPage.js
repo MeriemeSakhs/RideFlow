@@ -27,13 +27,13 @@ const DispatcherVehicles = () => {
       <Modal open={!!selectedVehicle} onClose={() => setSelectedVehicle(null)} title="Vehicle Details">
         {selectedVehicle && (
           <div className="space-y-2 text-sm">
-            <p><span className="text-slate-500">Vehicle ID:</span> <span className="font-semibold text-slate-900">{selectedVehicle.id}</span></p>
-            <p><span className="text-slate-500">Type:</span> {selectedVehicle.type}</p>
-            <p><span className="text-slate-500">Make &amp; Model:</span> {selectedVehicle.makeModel}</p>
-            <p><span className="text-slate-500">License Plate:</span> {selectedVehicle.licensePlate}</p>
-            <p><span className="text-slate-500">Assigned Driver:</span> {selectedVehicle.assignedDriver || "—"}</p>
-            <p><span className="text-slate-500">Mileage:</span> {selectedVehicle.mileage.toLocaleString()} mi</p>
-            <p><span className="text-slate-500">Status:</span> <span className="capitalize">{selectedVehicle.status}</span></p>
+            <p><span className="text-rideflow-navy/60">Vehicle ID:</span> <span className="font-semibold text-rideflow-navy">{selectedVehicle.id}</span></p>
+            <p><span className="text-rideflow-navy/60">Type:</span> {selectedVehicle.type}</p>
+            <p><span className="text-rideflow-navy/60">Make &amp; Model:</span> {selectedVehicle.makeModel}</p>
+            <p><span className="text-rideflow-navy/60">License Plate:</span> {selectedVehicle.licensePlate}</p>
+            <p><span className="text-rideflow-navy/60">Assigned Driver:</span> {selectedVehicle.assignedDriver || "—"}</p>
+            <p><span className="text-rideflow-navy/60">Mileage:</span> {selectedVehicle.mileage.toLocaleString()} mi</p>
+            <p><span className="text-rideflow-navy/60">Status:</span> <span className="capitalize">{selectedVehicle.status}</span></p>
           </div>
         )}
       </Modal>

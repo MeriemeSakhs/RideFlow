@@ -28,13 +28,13 @@ const DispatcherDrivers = () => {
       <Modal open={!!selectedDriver} onClose={() => setSelectedDriver(null)} title="Driver Details">
         {selectedDriver && (
           <div className="space-y-2 text-sm">
-            <p><span className="text-slate-500">Name:</span> <span className="font-semibold text-slate-900">{selectedDriver.name}</span></p>
-            <p><span className="text-slate-500">Driver ID:</span> {selectedDriver.id}</p>
-            <p><span className="text-slate-500">Email:</span> {selectedDriver.email}</p>
-            <p><span className="text-slate-500">Phone:</span> {selectedDriver.phone}</p>
-            <p><span className="text-slate-500">Vehicle Type:</span> {selectedDriver.vehicleType}</p>
-            <p><span className="text-slate-500">Status:</span> <span className="capitalize">{selectedDriver.status}</span></p>
-            <p><span className="text-slate-500">Total Rides:</span> {selectedDriver.totalRides}</p>
+            <p><span className="text-rideflow-navy/60">Name:</span> <span className="font-semibold text-rideflow-navy">{selectedDriver.name}</span></p>
+            <p><span className="text-rideflow-navy/60">Driver ID:</span> {selectedDriver.id}</p>
+            <p><span className="text-rideflow-navy/60">Email:</span> {selectedDriver.email}</p>
+            <p><span className="text-rideflow-navy/60">Phone:</span> {selectedDriver.phone}</p>
+            <p><span className="text-rideflow-navy/60">Vehicle Type:</span> {selectedDriver.vehicleType}</p>
+            <p><span className="text-rideflow-navy/60">Status:</span> <span className="capitalize">{selectedDriver.status}</span></p>
+            <p><span className="text-rideflow-navy/60">Total Rides:</span> {selectedDriver.totalRides}</p>
           </div>
         )}
       </Modal>

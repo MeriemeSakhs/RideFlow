@@ -10,7 +10,7 @@ import mockVehicles from "../../mockData/mockVehicles";
 // MOCK DATA / LOCAL STATE ONLY - Vehicle Management backend is not
 // implemented yet. See managerDriversPage.js for the same pattern.
 const emptyVehicleForm = { type: "Sedan", makeModel: "", licensePlate: "", assignedDriver: "", mileage: 0, status: "active" };
-const inputClass = "w-full px-4 py-2 rounded-md border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500";
+const inputClass = "w-full px-4 py-2 rounded-md border border-rideflow-navy/20 text-rideflow-navy focus:outline-none focus:ring-2 focus:ring-rideflow-orange focus:border-rideflow-orange";
 
 const ManagerVehicles = () => {
   const [user, setUser] = useState(undefined);
@@ -73,11 +73,11 @@ const ManagerVehicles = () => {
   return (
     <PortalLayout portalTitle="Manager Portal" portalSubtitle="Monitor operations and view analytics" navItems={MANAGER_NAV_ITEMS} user={user}>
       <div className="flex items-center justify-between mb-6">
-        <p className="text-sm text-slate-500">Manage your fleet vehicles</p>
+        <p className="text-sm text-rideflow-navy/60">Manage your fleet vehicles</p>
         <button
           type="button"
           onClick={openAdd}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-rideflow-orange hover:bg-rideflow-orange-hover text-white font-semibold text-sm shadow-sm transition-colors"
         >
           <Plus size={16} /> Add New Vehicle
         </button>
@@ -88,7 +88,7 @@ const ManagerVehicles = () => {
       <Modal open={!!modalMode} onClose={closeModal} title={modalMode === "add" ? "Add New Vehicle" : "Edit Vehicle"}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">Vehicle Type</label>
+            <label className="block text-sm font-semibold text-rideflow-navy mb-1">Vehicle Type</label>
             <select name="type" value={formData.type} onChange={handleChange} className={inputClass}>
               <option>Sedan</option>
               <option>SUV</option>
@@ -97,23 +97,23 @@ const ManagerVehicles = () => {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">Make &amp; Model</label>
+            <label className="block text-sm font-semibold text-rideflow-navy mb-1">Make &amp; Model</label>
             <input type="text" name="makeModel" placeholder="e.g. 2024 Toyota Camry" value={formData.makeModel} onChange={handleChange} className={inputClass} />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">License Plate</label>
+            <label className="block text-sm font-semibold text-rideflow-navy mb-1">License Plate</label>
             <input type="text" name="licensePlate" value={formData.licensePlate} onChange={handleChange} className={inputClass} />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">Assigned Driver</label>
+            <label className="block text-sm font-semibold text-rideflow-navy mb-1">Assigned Driver</label>
             <input type="text" name="assignedDriver" placeholder="Optional" value={formData.assignedDriver} onChange={handleChange} className={inputClass} />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">Mileage</label>
+            <label className="block text-sm font-semibold text-rideflow-navy mb-1">Mileage</label>
             <input type="number" name="mileage" min="0" value={formData.mileage} onChange={handleChange} className={inputClass} />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">Status</label>
+            <label className="block text-sm font-semibold text-rideflow-navy mb-1">Status</label>
             <select name="status" value={formData.status} onChange={handleChange} className={inputClass}>
               <option value="active">Active</option>
               <option value="in-use">In Use</option>
@@ -121,7 +121,7 @@ const ManagerVehicles = () => {
             </select>
           </div>
           {formError && <p className="text-red-600 text-sm">{formError}</p>}
-          <button type="submit" className="w-full py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition-colors shadow-sm">
+          <button type="submit" className="w-full py-2.5 rounded-lg bg-rideflow-orange hover:bg-rideflow-orange-hover text-white font-semibold transition-colors shadow-sm">
             {modalMode === "add" ? "Add Vehicle" : "Save Changes"}
           </button>
         </form>

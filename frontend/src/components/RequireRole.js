@@ -19,10 +19,10 @@ const RequireRole = ({ role, children }) => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-rideflow-gray/30 flex items-center justify-center px-4">
         <div className="text-center">
-          <p className="text-slate-600 text-lg mb-4">Please log in to continue.</p>
-          <Link to="/login" className="text-indigo-600 font-semibold hover:text-indigo-700">
+          <p className="text-rideflow-navy/70 text-lg mb-4">Please log in to continue.</p>
+          <Link to="/login" className="text-rideflow-orange font-semibold hover:text-rideflow-orange-hover">
             Go to login
           </Link>
         </div>
@@ -32,15 +32,15 @@ const RequireRole = ({ role, children }) => {
 
   if (user.role !== role) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-rideflow-gray/30 flex items-center justify-center px-4">
         <div className="text-center">
-          <p className="text-slate-900 text-lg font-semibold mb-2">You don't have access to this page.</p>
-          <p className="text-slate-600 mb-4">
+          <p className="text-rideflow-navy text-lg font-semibold mb-2">You don't have access to this page.</p>
+          <p className="text-rideflow-navy/70 mb-4">
             This area is for {role}s only. You're signed in as a {user.role}.
           </p>
           <Link
             to={user.role === "dispatcher" ? "/dispatcher" : "/manager"}
-            className="text-indigo-600 font-semibold hover:text-indigo-700"
+            className="text-rideflow-orange font-semibold hover:text-rideflow-orange-hover"
           >
             Go to your dashboard
           </Link>

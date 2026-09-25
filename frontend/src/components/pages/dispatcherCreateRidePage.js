@@ -65,31 +65,31 @@ const DispatcherCreateRide = () => {
       navItems={DISPATCHER_NAV_ITEMS}
       user={user}
     >
-      <Link to="/dispatcher" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-4">
+      <Link to="/dispatcher" className="inline-flex items-center gap-1 text-sm text-rideflow-navy/60 hover:text-rideflow-navy mb-4">
         <ArrowLeft size={16} /> Back to Dashboard
       </Link>
 
-      <div className="bg-white rounded-xl border border-slate-200 p-6 max-w-2xl">
-        <h2 className="text-lg font-bold text-slate-900">Create New Ride Request</h2>
-        <p className="text-sm text-slate-500 mb-6">Fill in the details below to create a new ride request</p>
+      <div className="bg-white rounded-xl border border-black/5 p-6 max-w-2xl">
+        <h2 className="text-lg font-bold text-rideflow-navy">Create New Ride Request</h2>
+        <p className="text-sm text-rideflow-navy/60 mb-6">Fill in the details below to create a new ride request</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <RideFormFields formData={formData} onChange={handleChange} />
 
-          <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 flex items-center justify-between">
+          <div className="bg-rideflow-gray/30 border border-black/5 rounded-lg p-4 flex items-center justify-between">
             <div>
-              <p className="text-sm font-semibold text-slate-700">Estimated Fare</p>
-              <p className="text-xs text-slate-500">
+              <p className="text-sm font-semibold text-rideflow-navy">Estimated Fare</p>
+              <p className="text-xs text-rideflow-navy/60">
                 {estimatedFare === null
                   ? 'Click "Calculate Rate" to estimate the fare'
                   : "Placeholder estimate - real pricing/distance lands with the pricing engine"}
               </p>
-              {estimatedFare !== null && <p className="text-xl font-bold text-slate-900 mt-1">${estimatedFare.toFixed(2)}</p>}
+              {estimatedFare !== null && <p className="text-xl font-bold text-rideflow-navy mt-1">${estimatedFare.toFixed(2)}</p>}
             </div>
             <button
               type="button"
               onClick={handleCalculateRate}
-              className="px-4 py-2 rounded-lg bg-indigo-100 text-indigo-700 hover:bg-indigo-200 font-semibold text-sm transition-colors"
+              className="px-4 py-2 rounded-lg bg-rideflow-orange/10 text-rideflow-orange hover:bg-rideflow-orange/20 font-semibold text-sm transition-colors"
             >
               Calculate Rate
             </button>
@@ -101,14 +101,14 @@ const DispatcherCreateRide = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-semibold transition-colors shadow-sm"
+              className="flex-1 py-2.5 rounded-lg bg-rideflow-orange hover:bg-rideflow-orange-hover disabled:opacity-50 text-white font-semibold transition-colors shadow-sm"
             >
               {isSubmitting ? "Saving..." : "Save Ride Request"}
             </button>
             <button
               type="button"
               onClick={() => navigate("/dispatcher")}
-              className="px-6 py-2.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors font-semibold"
+              className="px-6 py-2.5 rounded-lg border border-rideflow-navy/20 text-rideflow-navy hover:bg-rideflow-gray/40 transition-colors font-semibold"
             >
               Cancel
             </button>
