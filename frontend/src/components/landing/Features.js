@@ -3,10 +3,10 @@ import { ClipboardList, Users, DollarSign, BarChart3 } from "lucide-react";
 import Reveal from "./Reveal";
 
 const FEATURES = [
-  { icon: ClipboardList, title: "Ride Management", text: "Create, update, assign, and manage ride requests from one centralized system." },
-  { icon: Users, title: "Driver Management", text: "Manage driver availability, assignments, statuses, and communication." },
-  { icon: DollarSign, title: "Pricing Management", text: "Calculate ride prices based on the pricing rules you configure." },
-  { icon: BarChart3, title: "Reporting & Insights", text: "Access operational reports and understand ride and driver performance." },
+  { icon: ClipboardList, title: "Ride Management", text: "Keep every request organized from the moment it arrives to the moment it's completed." },
+  { icon: Users, title: "Driver Management", text: "Keep your team connected with real-time availability, assignments, and status updates." },
+  { icon: DollarSign, title: "Pricing Management", text: "Apply your pricing rules consistently across every ride." },
+  { icon: BarChart3, title: "Reporting & Insights", text: "See the numbers behind your operation and turn activity into actionable insight." },
 ];
 
 const Features = () => (
@@ -15,7 +15,7 @@ const Features = () => (
       <div className="max-w-2xl mb-14">
         <Reveal as="p" className="text-sm font-bold text-rideflow-orange uppercase tracking-wider mb-3">Platform</Reveal>
         <Reveal as="h2" delay={100} className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-          Everything You Need to Run Your Transportation Operation
+          Everything your dispatch team needs to manage rides, drivers, pricing, and performance, connected in one place.
         </Reveal>
       </div>
 

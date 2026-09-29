@@ -9,17 +9,17 @@ import RevealImage from "./RevealImage";
 
 const ROWS = [
   {
-    title: "Smart Dispatch",
-    text: "Dispatchers see incoming ride requests and available drivers side by side, and choose who gets assigned.",
-    bullets: ["View pending and active ride requests", "See which drivers are currently available", "Assign a driver manually - never automatic"],
+    title: "Dispatch With Confidence.",
+    text: "See incoming rides and available drivers side by side, then make the assignment yourself.",
+    bullets: ["View pending and active ride requests", "See which drivers are currently available", "Assign a driver manually, never automatic"],
     image: opsTight,
     alt: "Dispatcher reviewing ride requests on the RideFlow platform",
     variant: "fade",
     aspect: "aspect-[5/4]",
   },
   {
-    title: "Driver Communication",
-    text: "Once a ride is assigned, RideFlow notifies the driver by SMS with the details they need to get moving.",
+    title: "Keep Drivers in the Loop.",
+    text: "Every assignment triggers an SMS with the essential ride details, keeping drivers informed without another app.",
     bullets: ["Assignment sent by SMS automatically", "No app download required for drivers", "Pickup, passenger, and vehicle details included"],
     image: phoneSms,
     alt: "Driver's phone showing a RideFlow ride assignment notification",
@@ -27,8 +27,8 @@ const ROWS = [
     aspect: "aspect-[4/5]",
   },
   {
-    title: "Real-Time Tracking",
-    text: "See ride statuses and driver availability at a glance, so dispatchers know what's in progress and what needs attention.",
+    title: "Stay Ahead of Every Ride.",
+    text: "Track active rides, driver availability, and status changes from one live operational view.",
     bullets: ["Live view of active and pending rides", "Driver availability at a glance", "Status updates as rides progress"],
     image: heroVan,
     alt: "RideFlow vehicle on the road",
@@ -37,8 +37,8 @@ const ROWS = [
     aspect: "aspect-[5/4]",
   },
   {
-    title: "Reporting & Analytics",
-    text: "Turn ride and driver activity into reports that show completed rides, driver performance, and operational trends.",
+    title: "Data That Keeps Your Operation Moving.",
+    text: "Turn ride and driver activity into meaningful reports that help you understand performance, trends, and daily operations.",
     bullets: ["Completed ride and revenue summaries", "Driver performance by ride volume", "Operational trends over time"],
     image: laptopDash,
     alt: "Laptop showing the RideFlow operations dashboard",

@@ -5,6 +5,7 @@ import PortalLayout from "../layout/PortalLayout";
 import StatusBadge from "../ui/StatusBadge";
 import Modal from "../ui/Modal";
 import RideFormFields from "../rides/RideFormFields";
+import AssignDriverModal from "../drivers/AssignDriverModal";
 import { DISPATCHER_NAV_ITEMS } from "../../portalConfig";
 import {
   emptyRideForm,
@@ -41,6 +42,7 @@ const DispatcherRideRequests = () => {
 
   const [cancellingId, setCancellingId] = useState(null);
   const [actionErrors, setActionErrors] = useState({});
+  const [assigningRide, setAssigningRide] = useState(null);
 
   const fetchRides = useCallback(async () => {
     setIsLoading(true);
@@ -58,7 +60,7 @@ const DispatcherRideRequests = () => {
   useEffect(() => {
     const currentUser = getUserInfo();
     setUser(currentUser);
-    if (currentUser && currentUser.role === "dispatcher") fetchRides();
+    if (currentUser && ["dispatcher", "manager"].includes(currentUser.role)) fetchRides();
   }, [fetchRides]);
 
   const handleChange = ({ currentTarget: input }) => {
@@ -177,6 +179,7 @@ const DispatcherRideRequests = () => {
                   <th className="px-5 py-2 font-semibold">Pickup Time</th>
                   <th className="px-5 py-2 font-semibold">Vehicle</th>
                   <th className="px-5 py-2 font-semibold">Status</th>
+                  <th className="px-5 py-2 font-semibold">Driver</th>
                   <th className="px-5 py-2 font-semibold">Actions</th>
                 </tr>
               </thead>
@@ -191,8 +194,18 @@ const DispatcherRideRequests = () => {
                       <td className="px-5 py-3 text-rideflow-navy/60">{formatDisplayDate(ride.rideDate)}</td>
                       <td className="px-5 py-3 text-rideflow-navy capitalize">{ride.vehicleType}</td>
                       <td className="px-5 py-3"><StatusBadge status={ride.status} styles={STATUS_STYLES} /></td>
+                      <td className="px-5 py-3 text-rideflow-navy">{ride.assignedDriver?.name || "—"}</td>
                       <td className="px-5 py-3">
                         <div className="flex gap-3">
+                          {ride.status === "requested" && (
+                            <button
+                              type="button"
+                              onClick={() => setAssigningRide(ride)}
+                              className="text-rideflow-orange hover:text-rideflow-orange-hover font-semibold"
+                            >
+                              Assign
+                            </button>
+                          )}
                           <button
                             type="button"
                             onClick={() => openEdit(ride)}
@@ -243,6 +256,15 @@ const DispatcherRideRequests = () => {
           </div>
         </form>
       </Modal>
+
+      <AssignDriverModal
+        ride={assigningRide}
+        onClose={() => setAssigningRide(null)}
+        onAssigned={() => {
+          setAssigningRide(null);
+          fetchRides();
+        }}
+      />
     </PortalLayout>
   );
 };

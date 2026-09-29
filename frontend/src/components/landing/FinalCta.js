@@ -39,7 +39,7 @@ const FinalCta = () => {
             Get Started <ArrowRight size={18} />
           </Link>
           <a
-            href="#home"
+            href="#contact"
             className="inline-flex items-center gap-2 text-white font-semibold px-8 py-4 rounded-lg border border-white/25 hover:bg-white/5 transition-colors"
           >
             Contact Us

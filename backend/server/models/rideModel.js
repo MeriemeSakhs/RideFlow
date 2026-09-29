@@ -65,8 +65,16 @@ const rideSchema = new mongoose.Schema(
       default: 0,
     },
 
-    // Tenant boundary - stamped from the authenticated dispatcher's JWT at
-    // creation time, never trusted from the request body. See userModel.js.
+    // The real tenant boundary - stamped from the authenticated user's JWT
+    // at creation time, never trusted from the request body. See userModel.js.
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "companies",
+      required: true,
+    },
+
+    // Denormalized display fields only - companyId above is what queries
+    // actually filter by.
     companyName: {
       type: String,
       required: true,
@@ -75,6 +83,15 @@ const rideSchema = new mongoose.Schema(
     companySlug: {
       type: String,
       required: true,
+    },
+
+    // Who created this ride - stamped from the JWT the same way as
+    // companyName/companySlug. null on rides created before this field
+    // existed; never backfilled, so per-dispatcher stats only reflect real data.
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "users",
+      default: null,
     },
   },
   { collection: "rides" }

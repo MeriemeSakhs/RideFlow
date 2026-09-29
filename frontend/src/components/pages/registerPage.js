@@ -12,7 +12,6 @@ const emptyForm = {
   password: "",
   confirmPassword: "",
   companyName: "",
-  role: "dispatcher",
 };
 
 const errorMessageFrom = (error, fallback) =>
@@ -28,7 +27,6 @@ const validateForm = (formData) => {
   if (formData.password.length < 8) return "Password must be 8 or more characters";
   if (formData.password !== formData.confirmPassword) return "Passwords do not match";
   if (!formData.companyName.trim()) return "Company name is required";
-  if (!["dispatcher", "manager"].includes(formData.role)) return "Please select a role";
   return "";
 };
 
@@ -70,7 +68,11 @@ const Register = () => {
         <div className="flex justify-center mb-6">
           <RideFlowLogo size="lg" />
         </div>
-        <h2 className="text-xl font-bold text-rideflow-navy mb-6 text-center">Create your account</h2>
+        <h2 className="text-xl font-bold text-rideflow-navy mb-1 text-center">Create your company</h2>
+        <p className="text-sm text-rideflow-navy/50 mb-6 text-center">
+          This sets up a new RideFlow workspace and makes you its Manager. Add your dispatchers afterward from the
+          Manager portal.
+        </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -142,19 +144,6 @@ const Register = () => {
               onChange={handleChange}
               className="w-full px-4 py-2 rounded-md border border-rideflow-navy/20 text-rideflow-navy placeholder-rideflow-navy/35 focus:outline-none focus:ring-2 focus:ring-rideflow-orange focus:border-rideflow-orange"
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-rideflow-navy mb-1">Role</label>
-            <select
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              className="w-full px-4 py-2 rounded-md border border-rideflow-navy/20 text-rideflow-navy focus:outline-none focus:ring-2 focus:ring-rideflow-orange focus:border-rideflow-orange"
-            >
-              <option value="dispatcher">Dispatcher</option>
-              <option value="manager">Manager</option>
-            </select>
           </div>
 
           {error && <p className="text-red-600 text-sm">{error}</p>}

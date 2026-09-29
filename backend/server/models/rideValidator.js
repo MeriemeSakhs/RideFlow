@@ -9,7 +9,7 @@ const dateField = z.preprocess(value => {
 
 const locationField = z.string().trim().min(1, 'Location is required').max(200, 'Location must be 200 characters or fewer')
 const nameField = z.string().trim().min(1, 'Passenger name is required').max(200, 'Passenger name must be 200 characters or fewer')
-//E.164 format, e.g. +15551234567 - required for Twilio SMS delivery
+//E.164 format, e.g. +15551234567 - required for SMS delivery
 const phoneField = z.string().trim().regex(/^\+[1-9]\d{6,14}$/, 'Phone number must be in E.164 format, e.g. +15551234567')
 const vehicleTypeField = z.string().trim().min(1, 'Vehicle type is required').max(50, 'Vehicle type must be 50 characters or fewer')
 const passengerCountField = z.number({ invalid_type_error: 'Passenger count must be a number' }).int('Passenger count must be a whole number').min(1, 'Passenger count must be at least 1').max(20, 'Passenger count must be 20 or fewer')

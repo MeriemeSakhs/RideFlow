@@ -10,7 +10,9 @@
   "jest": {
     "testEnvironment": "node",
     "testTimeout": 30000,
-    "testMatch": ["**/__tests__/**/*.test.js"]
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ]
   },
   "repository": {
     "type": "git",
@@ -30,6 +32,7 @@
     "i": "^0.3.7",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.6.5",
+    "nodemailer": "^10.0.10",
     "zod": "^3.19.1"
   },
   "devDependencies": {

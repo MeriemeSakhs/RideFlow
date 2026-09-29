@@ -2,6 +2,14 @@ const mongoose = require("mongoose");
 
 const driverSchema = new mongoose.Schema(
   {
+    // No driver-management routes exist yet (future phase) - this is added
+    // now so the schema is ready for company scoping when they're built.
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "companies",
+      required: true,
+    },
+
     name: {
       type: String,
       required: true,

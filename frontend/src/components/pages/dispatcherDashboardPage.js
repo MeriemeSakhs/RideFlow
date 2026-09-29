@@ -1,16 +1,15 @@
 import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
-import { ClipboardList, Circle, Clock, CheckCircle2, Plus, User } from "lucide-react";
+import { ClipboardList, Circle, Clock, CheckCircle2, Plus } from "lucide-react";
 import getUserInfo from "../../utilities/decodeJwt";
 import PortalLayout from "../layout/PortalLayout";
 import StatCard from "../ui/StatCard";
 import StatusBadge from "../ui/StatusBadge";
-import Modal from "../ui/Modal";
+import AssignDriverModal from "../drivers/AssignDriverModal";
 import { DISPATCHER_NAV_ITEMS } from "../../portalConfig";
 import { formatDisplayDate } from "../../utilities/rideForm";
 import { authHeader, errorMessageFrom } from "../../utilities/api";
-import mockDrivers from "../../mockData/mockDrivers";
 
 const BASE_URL = `${process.env.REACT_APP_BACKEND_SERVER_URI}/ride`;
 
@@ -32,7 +31,7 @@ const isToday = (isoString) => {
   return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate();
 };
 
-const RideTable = ({ title, icon: Icon, iconColor, rides, showAssign, onAssign }) => (
+const RideTable = ({ title, icon: Icon, iconColor, rides, showAssign, showDriver, onAssign }) => (
   <div className="bg-white rounded-xl border border-black/5 overflow-hidden">
     <div className="px-5 py-4 border-b border-black/5 flex items-center gap-2">
       <Icon size={16} className={iconColor} />
@@ -51,6 +50,7 @@ const RideTable = ({ title, icon: Icon, iconColor, rides, showAssign, onAssign }
               <th className="px-5 py-2 font-semibold">Status</th>
               <th className="px-5 py-2 font-semibold">Pickup Time</th>
               <th className="px-5 py-2 font-semibold">Fare</th>
+              {showDriver && <th className="px-5 py-2 font-semibold">Driver</th>}
               {showAssign && <th className="px-5 py-2 font-semibold">Actions</th>}
             </tr>
           </thead>
@@ -62,6 +62,9 @@ const RideTable = ({ title, icon: Icon, iconColor, rides, showAssign, onAssign }
                 <td className="px-5 py-3"><StatusBadge status={ride.status} styles={STATUS_STYLES} /></td>
                 <td className="px-5 py-3 text-rideflow-navy/60">{formatDisplayDate(ride.rideDate)}</td>
                 <td className="px-5 py-3 text-rideflow-navy">${ride.price?.toFixed(2) ?? "0.00"}</td>
+                {showDriver && (
+                  <td className="px-5 py-3 text-rideflow-navy">{ride.assignedDriver?.name || "—"}</td>
+                )}
                 {showAssign && (
                   <td className="px-5 py-3">
                     <button
@@ -88,7 +91,6 @@ const DispatcherDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [assigningRide, setAssigningRide] = useState(null);
-  const [assignConfirmation, setAssignConfirmation] = useState("");
 
   const fetchRides = useCallback(async () => {
     setIsLoading(true);
@@ -106,7 +108,9 @@ const DispatcherDashboard = () => {
   useEffect(() => {
     const currentUser = getUserInfo();
     setUser(currentUser);
-    if (currentUser && currentUser.role === "dispatcher") fetchRides();
+    // A Manager viewing this page in Dispatcher Mode should see real ride
+    // data too - their JWT role is "manager", and GET /ride already permits it.
+    if (currentUser && ["dispatcher", "manager"].includes(currentUser.role)) fetchRides();
   }, [fetchRides]);
 
   const todaysRides = rides.filter((r) => isToday(r.rideDate) && r.status !== "cancelled");
@@ -114,12 +118,10 @@ const DispatcherDashboard = () => {
   const active = todaysRides.filter((r) => ACTIVE_STATUSES.includes(r.status));
   const completed = todaysRides.filter((r) => COMPLETED_STATUSES.includes(r.status));
 
-  const openAssign = (ride) => {
-    setAssigningRide(ride);
-    setAssignConfirmation("");
+  const handleAssigned = () => {
+    setAssigningRide(null);
+    fetchRides();
   };
-
-  const availableMockDrivers = mockDrivers.filter((d) => d.status === "available");
 
   return (
     <PortalLayout
@@ -150,51 +152,13 @@ const DispatcherDashboard = () => {
             <StatCard icon={CheckCircle2} label="Completed Today" value={completed.length} iconBg="bg-emerald-100" iconColor="text-emerald-600" />
           </div>
 
-          <RideTable title="Active Rides" icon={Circle} iconColor="text-blue-500" rides={active} />
-          <RideTable title="Pending Rides" icon={Clock} iconColor="text-amber-500" rides={pending} showAssign onAssign={openAssign} />
-          <RideTable title="Completed Rides" icon={CheckCircle2} iconColor="text-emerald-500" rides={completed} />
+          <RideTable title="Active Rides" icon={Circle} iconColor="text-blue-500" rides={active} showDriver />
+          <RideTable title="Pending Rides" icon={Clock} iconColor="text-amber-500" rides={pending} showAssign onAssign={setAssigningRide} />
+          <RideTable title="Completed Rides" icon={CheckCircle2} iconColor="text-emerald-500" rides={completed} showDriver />
         </div>
       )}
 
-      <Modal open={!!assigningRide} onClose={() => setAssigningRide(null)} title="Assign Driver">
-        {assigningRide && (
-          <div className="space-y-4">
-            <p className="text-sm text-rideflow-navy/60">
-              {assigningRide.pickupLocation} &rarr; {assigningRide.dropoffLocation}
-            </p>
-
-            <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-              Preview only - driver availability and assignment connect to the backend in a later phase.
-              Selecting a driver below does not change this ride's status yet.
-            </p>
-
-            {availableMockDrivers.length === 0 ? (
-              <p className="text-rideflow-navy/60 text-sm">No available drivers.</p>
-            ) : (
-              <div className="space-y-2">
-                {availableMockDrivers.map((driver) => (
-                  <button
-                    key={driver.id}
-                    type="button"
-                    onClick={() => setAssignConfirmation(`${driver.name} selected for this ride (preview only).`)}
-                    className="w-full flex items-center gap-3 border border-black/5 rounded-lg px-3 py-2.5 hover:border-rideflow-orange/40 hover:bg-rideflow-orange/10 transition-colors text-left"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-rideflow-orange/10 text-rideflow-orange flex items-center justify-center shrink-0">
-                      <User size={16} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-rideflow-navy">{driver.name}</p>
-                      <p className="text-xs text-rideflow-navy/60">{driver.vehicleType} &middot; {driver.totalRides} rides</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {assignConfirmation && <p className="text-emerald-600 text-sm">{assignConfirmation}</p>}
-          </div>
-        )}
-      </Modal>
+      <AssignDriverModal ride={assigningRide} onClose={() => setAssigningRide(null)} onAssigned={handleAssigned} />
     </PortalLayout>
   );
 };

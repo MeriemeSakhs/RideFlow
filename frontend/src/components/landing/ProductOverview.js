@@ -18,11 +18,11 @@ const ProductOverview = () => (
     <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
       <div className="min-w-0">
         <Reveal as="h2" className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
-          One Platform. Complete Control.
+          From First Request to Final Report.
         </Reveal>
         <Reveal as="p" delay={120} className="mt-5 text-white/65 leading-relaxed max-w-md">
-          RideFlow brings your transportation operations into one centralized platform — so dispatchers, drivers,
-          and managers all work from the same source of truth.
+          RideFlow connects every stage of the ride lifecycle, giving your team one place to manage the operation
+          from start to finish.
         </Reveal>
         <ul className="mt-8 space-y-3">
           {CHECKLIST.map((item, i) => (

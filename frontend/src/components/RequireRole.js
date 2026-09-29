@@ -6,6 +6,13 @@ import getUserInfo from "../utilities/decodeJwt";
 // clear "not authorized" message if the signed-in user has the wrong role,
 // otherwise renders the page. This is a UX convenience only - the backend
 // (middleware/auth.js) is what actually enforces role access on every API call.
+//
+// role="dispatcher" also admits a signed-in Manager (a Manager's real
+// permissions are a superset of a Dispatcher's - this is what lets a Manager
+// use "Dispatcher Mode" by simply navigating to /dispatcher/*, with no
+// separate view-mode state to keep in sync). role="manager" stays strictly
+// manager-only - a Dispatcher is never admitted, however they navigate there.
+// role="any" admits any signed-in user regardless of role (e.g. /profile).
 const RequireRole = ({ role, children }) => {
   const [user, setUser] = useState(undefined);
   const [checked, setChecked] = useState(false);
@@ -30,7 +37,9 @@ const RequireRole = ({ role, children }) => {
     );
   }
 
-  if (user.role !== role) {
+  const isAllowed = role === "any" || user.role === role || (role === "dispatcher" && user.role === "manager");
+
+  if (!isAllowed) {
     return (
       <div className="min-h-screen bg-rideflow-gray/30 flex items-center justify-center px-4">
         <div className="text-center">

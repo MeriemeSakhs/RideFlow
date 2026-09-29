@@ -26,16 +26,55 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
 
+    phone: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    // Email changes require confirming a code sent to the NEW address before
+    // the real `email` field is ever touched - these hold that transient state.
+    pendingEmail: {
+      type: String,
+      lowercase: true,
+      trim: true,
+      default: null,
+    },
+
+    emailVerificationCodeHash: {
+      type: String,
+      default: null,
+    },
+
+    emailVerificationExpires: {
+      type: Date,
+      default: null,
+    },
+
+    emailVerificationAttempts: {
+      type: Number,
+      default: 0,
+    },
+
     role: {
       type: String,
       enum: ["dispatcher", "manager"],
       required: true,
     },
 
+    // The real tenant boundary - every company-scoped query filters by this,
+    // read only from the verified JWT (see utilities/generateToken.js and
+    // middleware/auth.js), never trusted from a request body. companyName/
+    // companySlug below are denormalized display fields only.
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "companies",
+      required: true,
+    },
+
     // Free-text company name as entered by the user. companySlug is the
-    // normalized (trimmed/lowercased) form actually used to scope queries,
-    // so two people at "Acme Transport" and "acme transport " still land
-    // in the same tenant instead of being silently split by a casing typo.
+    // normalized (trimmed/lowercased) form; both are display-only now that
+    // companyId is the actual security boundary.
     companyName: {
       type: String,
       required: true,

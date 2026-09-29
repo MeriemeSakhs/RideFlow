@@ -19,7 +19,7 @@ const DarkBrandSection = () => (
         Centralized Operations, Not Scattered Tools
       </Reveal>
       <Reveal as="p" delay={220} className="mt-6 text-lg text-white/55 leading-relaxed max-w-2xl mx-auto">
-        RideFlow brings dispatching, drivers, pricing, and reporting into one platform - so your team spends less
+        RideFlow brings dispatching, drivers, pricing, and reporting into one platform, so your team spends less
         time coordinating and more time moving.
       </Reveal>
 

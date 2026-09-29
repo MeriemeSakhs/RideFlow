@@ -4,12 +4,12 @@ import Reveal from "./Reveal";
 import { useInView } from "../../utilities/useScrollAnimation";
 
 const STEPS = [
-  { num: "01", title: "Ride Request", text: "A ride request comes in and appears in the dispatcher's queue." },
-  { num: "02", title: "Driver Assignment", text: "The dispatcher reviews available drivers and assigns one manually - never automatic." },
-  { num: "03", title: "Driver Notification", text: "The assigned driver receives the ride details by SMS - no app required." },
-  { num: "04", title: "Active Ride", text: "The ride's status updates as it moves from pickup to drop-off." },
-  { num: "05", title: "Completed Ride", text: "Once finished, the ride is marked complete and logged." },
-  { num: "06", title: "Operational Reporting", text: "Completed rides roll up into reports for the whole team." },
+  { num: "01", title: "A Ride Comes In", text: "Every new request appears instantly in the dispatcher's queue." },
+  { num: "02", title: "You Choose the Driver", text: "Review available drivers and make the assignment manually." },
+  { num: "03", title: "The Driver Gets the Details", text: "Ride information is sent directly to the driver's phone by SMS." },
+  { num: "04", title: "The Ride Gets Moving", text: "Follow the ride as its status changes from pickup to drop-off." },
+  { num: "05", title: "The Ride Is Complete", text: "Completed trips are automatically recorded in the system." },
+  { num: "06", title: "The Data Tells the Story", text: "Turn completed rides into reports and operational insights." },
 ];
 
 const StepBlock = ({ step }) => {

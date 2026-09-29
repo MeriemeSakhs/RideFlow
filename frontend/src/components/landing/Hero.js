@@ -29,7 +29,7 @@ const Hero = () => {
             delay={150}
             className="mt-7 text-lg text-white/70 leading-relaxed max-w-xl"
           >
-            A smarter way for transportation companies to manage rides, drivers, pricing, and daily operations — all in one platform.
+            Everything your team needs to keep rides, drivers, and daily operations organized.
           </Reveal>
           <Reveal delay={300} className="mt-10 flex flex-wrap items-center gap-4">
             <Link

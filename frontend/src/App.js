@@ -16,6 +16,8 @@ import ManagerDrivers from "./components/pages/managerDriversPage";
 import ManagerVehicles from "./components/pages/managerVehiclesPage";
 import ManagerPricing from "./components/pages/managerPricingPage";
 import ManagerReports from "./components/pages/managerReportsPage";
+import ManagerTeamHours from "./components/pages/managerTeamHoursPage";
+import ProfilePage from "./components/pages/profilePage";
 import RequireRole from "./components/RequireRole";
 import getUserInfo from "./utilities/decodeJwt";
 
@@ -31,6 +33,7 @@ const App = () => {
       <Route path="/" element={<RootRoute />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/profile" element={<RequireRole role="any"><ProfilePage /></RequireRole>} />
 
       <Route path="/dispatcher" element={<RequireRole role="dispatcher"><DispatcherDashboard /></RequireRole>} />
       <Route path="/dispatcher/rides/new" element={<RequireRole role="dispatcher"><DispatcherCreateRide /></RequireRole>} />
@@ -43,6 +46,7 @@ const App = () => {
       <Route path="/manager/vehicles" element={<RequireRole role="manager"><ManagerVehicles /></RequireRole>} />
       <Route path="/manager/pricing" element={<RequireRole role="manager"><ManagerPricing /></RequireRole>} />
       <Route path="/manager/reports" element={<RequireRole role="manager"><ManagerReports /></RequireRole>} />
+      <Route path="/manager/team-hours" element={<RequireRole role="manager"><ManagerTeamHours /></RequireRole>} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

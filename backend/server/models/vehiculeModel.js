@@ -2,6 +2,14 @@ const mongoose = require("mongoose");
 
 const vehicleSchema = new mongoose.Schema(
   {
+    // No vehicle-management routes exist yet (future phase) - this is added
+    // now so the schema is ready for company scoping when they're built.
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "companies",
+      required: true,
+    },
+
     vehicleType: {
       type: String,
       required: true,
