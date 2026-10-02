@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate, useParams, useLocation } from "react-router-dom";
 import getUserInfo from "../utilities/decodeJwt";
+import { portalPathFor } from "../utilities/companyUrl";
 
 // Wraps a portal route: redirects to /login if no one is signed in, shows a
 // clear "not authorized" message if the signed-in user has the wrong role,
@@ -16,6 +17,8 @@ import getUserInfo from "../utilities/decodeJwt";
 const RequireRole = ({ role, children }) => {
   const [user, setUser] = useState(undefined);
   const [checked, setChecked] = useState(false);
+  const { companySlug } = useParams();
+  const location = useLocation();
 
   useEffect(() => {
     setUser(getUserInfo());
@@ -29,12 +32,27 @@ const RequireRole = ({ role, children }) => {
       <div className="min-h-screen bg-rideflow-gray/30 flex items-center justify-center px-4">
         <div className="text-center">
           <p className="text-rideflow-navy/70 text-lg mb-4">Please log in to continue.</p>
-          <Link to="/login" className="text-rideflow-orange font-semibold hover:text-rideflow-orange-hover">
+          <Link
+            to={companySlug ? `/${companySlug}/login` : "/login"}
+            className="text-rideflow-orange font-semibold hover:text-rideflow-orange-hover"
+          >
             Go to login
           </Link>
         </div>
       </div>
     );
+  }
+
+  // The URL's company slug is purely a routing/display convenience (see
+  // utilities/companyUrl.js) - it never grants access to anything. If it
+  // doesn't match the signed-in user's own company, this redirects them to
+  // the identical page under their own correct URL rather than silently
+  // rendering their own (still correctly company-scoped, since the backend
+  // never trusts this param) data under a URL that visually claims to
+  // belong to a different company.
+  if (companySlug && user.companySlug && companySlug !== user.companySlug) {
+    const restOfPath = location.pathname.split("/").slice(2).join("/");
+    return <Navigate to={`/${user.companySlug}/${restOfPath}`} replace />;
   }
 
   const isAllowed = role === "any" || user.role === role || (role === "dispatcher" && user.role === "manager");
@@ -48,7 +66,7 @@ const RequireRole = ({ role, children }) => {
             This area is for {role}s only. You're signed in as a {user.role}.
           </p>
           <Link
-            to={user.role === "dispatcher" ? "/dispatcher" : "/manager"}
+            to={portalPathFor(user.role, user.companySlug)}
             className="text-rideflow-orange font-semibold hover:text-rideflow-orange-hover"
           >
             Go to your dashboard

@@ -1,31 +1,47 @@
 import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 import getUserInfo from "../../utilities/decodeJwt";
 import PortalLayout from "../layout/PortalLayout";
 import StatusBadge from "../ui/StatusBadge";
+import AddressCell from "../ui/AddressCell";
+import WrapCell from "../ui/WrapCell";
 import Modal from "../ui/Modal";
+import ConfirmDialog from "../ui/ConfirmDialog";
 import RideFormFields from "../rides/RideFormFields";
 import AssignDriverModal from "../drivers/AssignDriverModal";
 import { DISPATCHER_NAV_ITEMS } from "../../portalConfig";
+import { portalPathFor } from "../../utilities/companyUrl";
 import {
   emptyRideForm,
   validateRideForm,
   toRidePayload,
   splitIsoIntoDateAndTime,
-  formatDisplayDate,
+  splitEstimatedDurationMinutes,
+  formatDisplayDateOnly,
+  formatDisplayTime,
+  getDateRangeParams,
 } from "../../utilities/rideForm";
 import { authHeader, errorMessageFrom } from "../../utilities/api";
 
 const BASE_URL = `${process.env.REACT_APP_BACKEND_SERVER_URI}/ride`;
-const CANCELLABLE_STATUSES = ["requested", "assigned", "in-progress"];
-const STATUS_FILTERS = ["all", "requested", "assigned", "in-progress", "completed", "cancelled"];
+const CANCELLABLE_STATUSES = ["requested", "pending", "assigned", "in-progress"];
+const STATUS_FILTERS = ["all", "requested", "pending", "assigned", "in-progress", "completed", "cancelled"];
 
 const STATUS_STYLES = {
   requested: "bg-amber-100 text-amber-700",
+  pending: "bg-orange-100 text-orange-700",
   assigned: "bg-blue-100 text-blue-700",
   "in-progress": "bg-violet-100 text-violet-700",
   completed: "bg-emerald-100 text-emerald-700",
   cancelled: "bg-red-100 text-red-700",
+};
+
+// A ride is "pending" the instant it's offered to a driver, but the driver
+// hasn't confirmed or declined yet - this label is what keeps the dispatcher
+// from reading that as the driver having already accepted.
+const STATUS_LABELS = {
+  pending: "Pending Confirmation",
 };
 
 const DispatcherRideRequests = () => {
@@ -34,6 +50,7 @@ const DispatcherRideRequests = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [listError, setListError] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState(""); // "" = no filter, else "YYYY-MM-DD"
 
   const [editingRide, setEditingRide] = useState(null);
   const [formData, setFormData] = useState(emptyRideForm);
@@ -42,20 +59,22 @@ const DispatcherRideRequests = () => {
 
   const [cancellingId, setCancellingId] = useState(null);
   const [actionErrors, setActionErrors] = useState({});
+  const [confirmTarget, setConfirmTarget] = useState(null);
   const [assigningRide, setAssigningRide] = useState(null);
 
   const fetchRides = useCallback(async () => {
     setIsLoading(true);
     setListError("");
     try {
-      const { data } = await axios.get(BASE_URL, { headers: authHeader() });
+      const params = getDateRangeParams(dateFilter);
+      const { data } = await axios.get(BASE_URL, { headers: authHeader(), params });
       setRides(data);
     } catch (error) {
       setListError(errorMessageFrom(error, "Could not load ride requests. Check your connection and try again."));
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [dateFilter]);
 
   useEffect(() => {
     const currentUser = getUserInfo();
@@ -70,6 +89,7 @@ const DispatcherRideRequests = () => {
   const openEdit = (ride) => {
     setEditingRide(ride);
     const { pickupDate, pickupTime } = splitIsoIntoDateAndTime(ride.rideDate);
+    const { durationHours, durationMinutes } = splitEstimatedDurationMinutes(ride.estimatedDurationMinutes);
     setFormData({
       passengerName: ride.passengerName,
       passengerPhone: ride.passengerPhone,
@@ -80,6 +100,8 @@ const DispatcherRideRequests = () => {
       passengerCount: ride.passengerCount,
       vehicleType: ride.vehicleType,
       notes: ride.notes || "",
+      durationHours,
+      durationMinutes,
     });
     setFormError("");
   };
@@ -115,19 +137,26 @@ const DispatcherRideRequests = () => {
     }
   };
 
-  const handleCancelRide = async (ride) => {
-    if (!window.confirm(`Cancel the ride for ${ride.passengerName}?`)) return;
+  // Clicking Cancel only opens the confirmation dialog - the ride stays
+  // untouched until the dialog's own Cancel-ride button is explicitly clicked.
+  const handleCancelRide = (ride) => setConfirmTarget(ride);
 
+  const dismissCancelConfirm = () => setConfirmTarget(null);
+
+  const confirmCancelRide = async () => {
+    const ride = confirmTarget;
     setCancellingId(ride._id);
     setActionErrors((prev) => ({ ...prev, [ride._id]: "" }));
 
     try {
       await axios.patch(`${BASE_URL}/${ride._id}/cancel`, {}, { headers: authHeader() });
       if (editingRide && editingRide._id === ride._id) closeEdit();
+      setConfirmTarget(null);
       await fetchRides();
     } catch (error) {
       const message = errorMessageFrom(error, "Could not cancel ride. Please try again.");
       setActionErrors((prev) => ({ ...prev, [ride._id]: message }));
+      setConfirmTarget(null);
       if (error.response && error.response.status === 404) fetchRides();
     } finally {
       setCancellingId(null);
@@ -144,8 +173,28 @@ const DispatcherRideRequests = () => {
       user={user}
     >
       <div className="bg-white rounded-xl border border-black/5 overflow-hidden">
-        <div className="px-5 py-4 border-b border-black/5 flex items-center justify-between flex-wrap gap-3">
-          <h2 className="text-lg font-bold text-rideflow-navy">Ride Requests</h2>
+        <div className="px-5 py-4 border-b border-black/5 space-y-3">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <h2 className="text-lg font-bold text-rideflow-navy">Ride Requests</h2>
+            <div className="flex items-center gap-2">
+              <label htmlFor="rideDateFilter" className="text-xs font-semibold text-rideflow-navy/50">
+                Date
+              </label>
+              <input
+                id="rideDateFilter"
+                type="date"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="text-sm px-3 py-1.5 rounded-md border border-rideflow-navy/20 text-rideflow-navy focus:outline-none focus:ring-2 focus:ring-rideflow-orange focus:border-rideflow-orange"
+              />
+              {dateFilter && (
+                <button type="button" onClick={() => setDateFilter("")} className="text-xs text-rideflow-navy/50 hover:text-rideflow-navy font-semibold">
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+
           <div className="flex items-center gap-2 flex-wrap">
             {STATUS_FILTERS.map((status) => (
               <button
@@ -156,7 +205,7 @@ const DispatcherRideRequests = () => {
                   statusFilter === status ? "bg-rideflow-orange text-white" : "bg-rideflow-gray/60 text-rideflow-navy/70 hover:bg-rideflow-gray/70"
                 }`}
               >
-                {status}
+                {STATUS_LABELS[status] || status}
               </button>
             ))}
           </div>
@@ -170,17 +219,29 @@ const DispatcherRideRequests = () => {
 
         {!isLoading && !listError && visibleRides.length > 0 && (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm table-fixed">
+              <colgroup>
+                <col className="w-[123px]" />
+                <col className="w-[145px]" />
+                <col className="w-[145px]" />
+                <col className="w-[80px]" />
+                <col className="w-[85px]" />
+                <col className="w-[78px]" />
+                <col className="w-[182px]" />
+                <col className="w-[115px]" />
+                <col className="w-[160px]" />
+              </colgroup>
               <thead>
                 <tr className="text-left text-xs text-rideflow-navy/40 uppercase border-b border-black/5">
-                  <th className="px-5 py-2 font-semibold">Passenger</th>
-                  <th className="px-5 py-2 font-semibold">Pickup</th>
-                  <th className="px-5 py-2 font-semibold">Drop-off</th>
-                  <th className="px-5 py-2 font-semibold">Pickup Time</th>
-                  <th className="px-5 py-2 font-semibold">Vehicle</th>
-                  <th className="px-5 py-2 font-semibold">Status</th>
-                  <th className="px-5 py-2 font-semibold">Driver</th>
-                  <th className="px-5 py-2 font-semibold">Actions</th>
+                  <th className="px-3 py-2 font-semibold">Passenger</th>
+                  <th className="px-3 py-2 font-semibold">Pickup</th>
+                  <th className="px-3 py-2 font-semibold">Drop-off</th>
+                  <th className="px-3 py-2 font-semibold">Pickup Date</th>
+                  <th className="px-3 py-2 font-semibold">Pickup Time</th>
+                  <th className="px-3 py-2 font-semibold">Vehicle</th>
+                  <th className="px-3 py-2 font-semibold">Status</th>
+                  <th className="px-3 py-2 font-semibold">Driver</th>
+                  <th className="px-3 py-2 font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -188,15 +249,16 @@ const DispatcherRideRequests = () => {
                   const isFinal = !CANCELLABLE_STATUSES.includes(ride.status);
                   return (
                     <tr key={ride._id} className="border-b border-black/5 last:border-0 align-top">
-                      <td className="px-5 py-3 text-rideflow-navy font-medium">{ride.passengerName}</td>
-                      <td className="px-5 py-3 text-rideflow-navy">{ride.pickupLocation}</td>
-                      <td className="px-5 py-3 text-rideflow-navy">{ride.dropoffLocation}</td>
-                      <td className="px-5 py-3 text-rideflow-navy/60">{formatDisplayDate(ride.rideDate)}</td>
-                      <td className="px-5 py-3 text-rideflow-navy capitalize">{ride.vehicleType}</td>
-                      <td className="px-5 py-3"><StatusBadge status={ride.status} styles={STATUS_STYLES} /></td>
-                      <td className="px-5 py-3 text-rideflow-navy">{ride.assignedDriver?.name || "—"}</td>
-                      <td className="px-5 py-3">
-                        <div className="flex gap-3">
+                      <td className="px-3 py-3 text-rideflow-navy font-medium"><WrapCell>{ride.passengerName}</WrapCell></td>
+                      <td className="px-3 py-3 text-rideflow-navy"><AddressCell>{ride.pickupLocation}</AddressCell></td>
+                      <td className="px-3 py-3 text-rideflow-navy"><AddressCell>{ride.dropoffLocation}</AddressCell></td>
+                      <td className="px-3 py-3 text-rideflow-navy/60 whitespace-nowrap">{formatDisplayDateOnly(ride.rideDate)}</td>
+                      <td className="px-3 py-3 text-rideflow-navy/60 whitespace-nowrap">{formatDisplayTime(ride.rideDate)}</td>
+                      <td className="px-3 py-3 text-rideflow-navy capitalize"><WrapCell>{ride.vehicleType}</WrapCell></td>
+                      <td className="px-3 py-3"><StatusBadge status={ride.status} styles={STATUS_STYLES} label={STATUS_LABELS[ride.status]} /></td>
+                      <td className="px-3 py-3 text-rideflow-navy"><WrapCell>{ride.assignedDriver?.name || "—"}</WrapCell></td>
+                      <td className="px-3 py-3">
+                        <div className="flex flex-wrap gap-x-2 gap-y-1">
                           {ride.status === "requested" && (
                             <button
                               type="button"
@@ -205,6 +267,14 @@ const DispatcherRideRequests = () => {
                             >
                               Assign
                             </button>
+                          )}
+                          {["assigned", "in-progress"].includes(ride.status) && (
+                            <Link
+                              to={`${portalPathFor("dispatcher", user?.companySlug)}/rides/${ride._id}/track`}
+                              className="text-rideflow-orange hover:text-rideflow-orange-hover font-semibold"
+                            >
+                              Track Ride
+                            </Link>
                           )}
                           <button
                             type="button"
@@ -236,7 +306,7 @@ const DispatcherRideRequests = () => {
 
       <Modal open={!!editingRide} onClose={closeEdit} title="Edit Ride Request">
         <form onSubmit={handleSubmitEdit} className="space-y-4">
-          <RideFormFields formData={formData} onChange={handleChange} />
+          <RideFormFields formData={formData} onChange={handleChange} showDurationField />
           {formError && <p className="text-red-600 text-sm">{formError}</p>}
           <div className="flex gap-3 pt-2">
             <button
@@ -264,6 +334,22 @@ const DispatcherRideRequests = () => {
           setAssigningRide(null);
           fetchRides();
         }}
+      />
+
+      <ConfirmDialog
+        open={!!confirmTarget}
+        title="Cancel Ride?"
+        message={
+          confirmTarget
+            ? `Are you sure you want to cancel the ride for ${confirmTarget.passengerName}? This action cannot be undone.`
+            : ""
+        }
+        confirmLabel="Cancel Ride"
+        confirmingLabel="Cancelling..."
+        cancelLabel="Keep Ride"
+        isConfirming={cancellingId === confirmTarget?._id}
+        onConfirm={confirmCancelRide}
+        onCancel={dismissCancelConfirm}
       />
     </PortalLayout>
   );

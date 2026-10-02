@@ -9,8 +9,10 @@ const PORTAL_OPTIONS = [
 
 // Manager-only control (rendered by PortalLayout). Switching views is just
 // navigating between /dispatcher and /manager - the account's actual role
-// never changes, only which portal is currently on screen.
-const RoleSwitcher = ({ currentView, onClose }) => {
+// never changes, only which portal is currently on screen. companySlug (if
+// the manager is currently under a company-specific URL) is preserved so
+// switching views doesn't drop them back to the bare, unprefixed route.
+const RoleSwitcher = ({ currentView, companySlug, onClose }) => {
   const navigate = useNavigate();
 
   return (
@@ -28,7 +30,7 @@ const RoleSwitcher = ({ currentView, onClose }) => {
               type="button"
               onClick={() => {
                 onClose();
-                navigate(opt.path);
+                navigate(companySlug ? `/${companySlug}${opt.path}` : opt.path);
               }}
               aria-label={`Switch to ${opt.label} view`}
               className={`w-full text-left px-4 py-3 flex items-start gap-2 transition-colors hover:bg-rideflow-gray/40 ${

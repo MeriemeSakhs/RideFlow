@@ -42,4 +42,29 @@ const sendEmailChangeCode = async (toEmail, code) => {
   });
 };
 
-module.exports = { sendEmailChangeCode };
+// Throws if SMTP isn't configured or sending fails - same contract as
+// sendEmailChangeCode above; callers must catch it themselves.
+const sendSignupVerificationCode = async (toEmail, fullName, code) => {
+  const t = getTransporter();
+  if (!t) {
+    throw new Error("Email sending is not configured (missing SMTP_USER/SMTP_APP_PASSWORD)");
+  }
+
+  await t.sendMail({
+    from: `"RideFlow" <${process.env.SMTP_USER}>`,
+    to: toEmail,
+    subject: "Verify your RideFlow email",
+    text: `Hello ${fullName},\n\nWelcome to RideFlow.\n\nUse the verification code below to verify your email address:\n\n${code}\n\nThis code expires in 10 minutes.\n\nIf you did not create this RideFlow account, you can ignore this email.\n\nRideFlow`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 420px; margin: 0 auto;">
+        <p style="color:#172643; font-size:16px;">Hello ${fullName},</p>
+        <p style="color:#172643; font-size:16px;">Welcome to RideFlow.</p>
+        <p style="color:#172643; font-size:16px;">Use the verification code below to verify your email address:</p>
+        <p style="font-size:32px; font-weight:bold; letter-spacing:8px; color:#172643; margin: 20px 0;">${code}</p>
+        <p style="color:#666; font-size:13px;">This code expires in 10 minutes. If you did not create this RideFlow account, you can safely ignore this email.</p>
+      </div>
+    `,
+  });
+};
+
+module.exports = { sendEmailChangeCode, sendSignupVerificationCode };

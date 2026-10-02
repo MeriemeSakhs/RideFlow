@@ -6,7 +6,12 @@ const inputClass =
 
 // Shared field set used by both the Create Ride Request page and the edit
 // modal on the Ride Requests page, so the two forms never drift apart.
-const RideFormFields = ({ formData, onChange }) => (
+// showDurationField: the Estimated Ride Duration inputs only render when
+// this is true - Create Ride intentionally omits it (passes nothing, so it
+// defaults to false) and stays exactly as it looked before that field
+// existed; the edit modal still passes true, since an already-created
+// ride's estimatedDurationMinutes still needs to be viewable/editable.
+const RideFormFields = ({ formData, onChange, showDurationField = false }) => (
   <>
     <div>
       <label className="block text-sm font-semibold text-rideflow-navy mb-1">Passenger Name</label>
@@ -38,6 +43,40 @@ const RideFormFields = ({ formData, onChange }) => (
         <input type="time" name="pickupTime" value={formData.pickupTime} onChange={onChange} className={inputClass} />
       </div>
     </div>
+
+    {showDurationField && (
+      <div>
+        <label className="block text-sm font-semibold text-rideflow-navy mb-1">Estimated Ride Duration (Optional)</label>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <input
+              type="number"
+              name="durationHours"
+              min="0"
+              placeholder="Hours"
+              value={formData.durationHours}
+              onChange={onChange}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <input
+              type="number"
+              name="durationMinutes"
+              min="0"
+              max="59"
+              placeholder="Minutes"
+              value={formData.durationMinutes}
+              onChange={onChange}
+              className={inputClass}
+            />
+          </div>
+        </div>
+        <p className="text-xs text-rideflow-navy/40 mt-1">
+          Leave blank if unknown. A 1-hour break is added automatically after the ride when checking driver availability.
+        </p>
+      </div>
+    )}
 
     <div className="grid grid-cols-2 gap-4">
       <div>

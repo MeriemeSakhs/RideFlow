@@ -24,18 +24,33 @@ const AssignDriverModal = ({ ride, onClose, onAssigned }) => {
   const [isAssigning, setIsAssigning] = useState(false);
   const [result, setResult] = useState(null); // { ride, smsStatus } once assignment succeeds
 
+  // Availability is schedule-aware, not just Driver.status="available" - a
+  // driver busy with one ride can still be free for a different,
+  // non-conflicting one, so this always asks the backend specifically
+  // "who's free for THIS ride's pickup time" (see routes/driverRoutes.js).
   const fetchAvailableDrivers = useCallback(async () => {
+    if (!ride) return;
     setIsLoading(true);
     setLoadError("");
     try {
-      const { data } = await axios.get(`${DRIVERS_URL}?status=available`, { headers: authHeader() });
+      // Pass the ride's own estimatedDurationMinutes when it has one, so
+      // the backend checks against this ride's real occupied window rather
+      // than always falling back to the default (see
+      // utilities/driverSchedule.js on the backend).
+      const durationParam = ride.estimatedDurationMinutes
+        ? `&estimatedDurationMinutes=${encodeURIComponent(ride.estimatedDurationMinutes)}`
+        : "";
+      const { data } = await axios.get(
+        `${DRIVERS_URL}?pickupDate=${encodeURIComponent(ride.rideDate)}${durationParam}`,
+        { headers: authHeader() }
+      );
       setDrivers(data);
     } catch (err) {
       setLoadError(errorMessageFrom(err, "Could not load available drivers. Check your connection and try again."));
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [ride]);
 
   useEffect(() => {
     if (!ride) return;
@@ -87,7 +102,7 @@ const AssignDriverModal = ({ ride, onClose, onAssigned }) => {
   };
 
   return (
-    <Modal open={!!ride} onClose={handleModalClose} title={result ? "Driver Assigned" : "Assign Driver"}>
+    <Modal open={!!ride} onClose={handleModalClose} title={result ? "Ride Offered" : "Assign Driver"}>
       {ride && !result && (
         <div className="space-y-4">
           <p className="text-sm text-rideflow-navy/60">
@@ -100,7 +115,7 @@ const AssignDriverModal = ({ ride, onClose, onAssigned }) => {
 
           {!isLoading && !loadError && drivers.length === 0 && (
             <p className="text-rideflow-navy/60 text-sm bg-rideflow-gray/40 rounded-lg px-3 py-3">
-              No drivers are currently available. Add drivers or wait for one to become free, then try again.
+              No drivers are available for this ride's scheduled pickup time. Add a driver or choose a different time, then try again.
             </p>
           )}
 
@@ -166,27 +181,28 @@ const AssignDriverModal = ({ ride, onClose, onAssigned }) => {
           <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2.5">
             <Check size={18} className="text-emerald-600 shrink-0" />
             <p className="text-sm text-emerald-800">
-              <span className="font-semibold">{result.ride.assignedDriver?.name}</span> has been assigned to this ride.
+              The ride has been offered to <span className="font-semibold">{result.ride.assignedDriver?.name}</span>.
+              It becomes assigned once they confirm.
             </p>
           </div>
 
           <div>
             <p className="text-xs font-semibold text-rideflow-navy/50 uppercase tracking-wide mb-1">Ride Status</p>
-            <span className="inline-block px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold capitalize">
-              {result.ride.status}
+            <span className="inline-block px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-semibold">
+              Pending Confirmation
             </span>
           </div>
 
           {result.smsStatus === "sent" ? (
             <div className="flex items-start gap-2.5 text-sm text-rideflow-navy/70">
               <MessageSquare size={16} className="text-emerald-600 shrink-0 mt-0.5" />
-              <p>The driver was notified by SMS with the pickup and drop-off details.</p>
+              <p>The driver was texted a link to confirm or decline the ride.</p>
             </div>
           ) : (
             <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5">
               <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
               <p className="text-sm text-amber-800">
-                The ride was assigned, but the SMS notification could not be sent. Please contact the driver directly.
+                The ride is pending, but the SMS notification could not be sent. Please contact the driver directly.
               </p>
             </div>
           )}

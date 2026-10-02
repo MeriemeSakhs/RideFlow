@@ -3,6 +3,7 @@ import axios from "axios";
 import { Plus } from "lucide-react";
 import PortalLayout from "../layout/PortalLayout";
 import Modal from "../ui/Modal";
+import ConfirmDialog from "../ui/ConfirmDialog";
 import DriversTable from "../drivers/DriversTable";
 import { MANAGER_NAV_ITEMS } from "../../portalConfig";
 import getUserInfo from "../../utilities/decodeJwt";
@@ -25,6 +26,10 @@ const ManagerDrivers = () => {
   const [formData, setFormData] = useState(emptyDriverForm);
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [removingId, setRemovingId] = useState(null);
+  const [actionError, setActionError] = useState("");
+  const [confirmTarget, setConfirmTarget] = useState(null);
 
   const fetchDrivers = useCallback(async () => {
     setIsLoading(true);
@@ -77,6 +82,28 @@ const ManagerDrivers = () => {
     }
   };
 
+  // Clicking Delete only opens the confirmation dialog - nothing is
+  // deleted until the dialog's own Delete button is explicitly clicked.
+  const handleRemove = (driver) => setConfirmTarget(driver);
+
+  const cancelRemove = () => setConfirmTarget(null);
+
+  const confirmRemove = async () => {
+    const driver = confirmTarget;
+    setActionError("");
+    setRemovingId(driver._id);
+    try {
+      await axios.patch(`${DRIVERS_URL}/${driver._id}/remove`, {}, { headers: authHeader() });
+      setConfirmTarget(null);
+      await fetchDrivers();
+    } catch (err) {
+      setActionError(errorMessageFrom(err, "Could not delete driver. Please try again."));
+      setConfirmTarget(null);
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
   return (
     <PortalLayout portalTitle="Manager Portal" portalSubtitle="Monitor operations and view analytics" navItems={MANAGER_NAV_ITEMS} user={user}>
       <div className="flex items-center justify-between mb-6">
@@ -92,7 +119,12 @@ const ManagerDrivers = () => {
 
       {isLoading && <p className="text-rideflow-navy/60">Loading drivers...</p>}
       {!isLoading && listError && <p className="text-red-600 text-sm mb-4">{listError}</p>}
-      {!isLoading && !listError && <DriversTable drivers={drivers} onSelect={setSelectedDriver} />}
+      {!isLoading && !listError && (
+        <>
+          <DriversTable drivers={drivers} onSelect={setSelectedDriver} onRemove={handleRemove} removingId={removingId} />
+          {actionError && <p className="text-red-600 text-xs mt-2">{actionError}</p>}
+        </>
+      )}
 
       <Modal open={addOpen} onClose={() => setAddOpen(false)} title="Add New Driver">
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -136,6 +168,19 @@ const ManagerDrivers = () => {
           </div>
         )}
       </Modal>
+
+      <ConfirmDialog
+        open={!!confirmTarget}
+        title="Delete Driver?"
+        message={
+          confirmTarget
+            ? `Are you sure you want to delete ${confirmTarget.name}? They will no longer be assignable to new rides, but any ride history referencing them is unaffected. This action cannot be undone.`
+            : ""
+        }
+        isConfirming={removingId === confirmTarget?._id}
+        onConfirm={confirmRemove}
+        onCancel={cancelRemove}
+      />
     </PortalLayout>
   );
 };

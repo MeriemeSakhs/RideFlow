@@ -9,6 +9,9 @@ const rideRoutes = require('./routes/rideRoutes')
 const workSessionRoutes = require('./routes/workSessionRoutes')
 const companyRoutes = require('./routes/companyRoutes')
 const driverRoutes = require('./routes/driverRoutes')
+const pricingRoutes = require('./routes/pricingRoutes')
+const vehicleRoutes = require('./routes/vehicleRoutes')
+const geocodeRoutes = require('./routes/geocodeRoutes')
 
 require('dotenv').config();
 const SERVER_PORT = 8081
@@ -23,6 +26,9 @@ app.use('/ride', rideRoutes)
 app.use('/work-sessions', workSessionRoutes)
 app.use('/company', companyRoutes)
 app.use('/driver', driverRoutes)
+app.use('/pricing', pricingRoutes)
+app.use('/vehicle', vehicleRoutes)
+app.use('/geocode', geocodeRoutes)
 
 app.listen(SERVER_PORT, (req, res) => {
     console.log(`The backend service is running on port ${SERVER_PORT} and waiting for requests.`);

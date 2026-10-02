@@ -15,6 +15,20 @@ const companySchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+
+    // The authoritative, URL-safe company identifier used for company-
+    // specific URLs (e.g. rideflow.com/<slug>/login) - see
+    // utilities/companySlug.js. This is display/routing only, never a
+    // security boundary: every backend route still derives companyId
+    // exclusively from the verified JWT (see middleware/auth.js), never
+    // from a URL param.
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
   },
   { collection: "companies", timestamps: true }
 );

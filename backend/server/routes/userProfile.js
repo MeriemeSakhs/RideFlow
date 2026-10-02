@@ -1,18 +1,14 @@
 const express = require("express");
 const router = express.Router();
-const crypto = require("crypto");
+const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const userModel = require("../models/userModel");
+const companyModel = require("../models/companyModel");
 const { profileUpdateValidation, changePasswordValidation, verifyEmailCodeValidation, dispatcherCreateValidation } = require("../models/userValidator");
 const { generateAccessToken } = require("../utilities/generateToken");
 const { requireAuth, requireRole } = require("../middleware/auth");
 const { sendEmailChangeCode } = require("../utilities/mailer");
-
-const CODE_EXPIRY_MS = 10 * 60 * 1000;
-const MAX_VERIFY_ATTEMPTS = 5;
-
-const hashCode = (code) => crypto.createHash("sha256").update(code).digest("hex");
-const generateCode = () => String(crypto.randomInt(100000, 1000000));
+const { CODE_EXPIRY_MS, MAX_VERIFY_ATTEMPTS, generateCode, hashCode } = require("../utilities/verificationCode");
 
 // Self-service - always operates on req.user.id from the verified token,
 // never a client-supplied id, so a user can only ever read/edit their own record.
@@ -171,14 +167,47 @@ router.put("/change-password", requireAuth, async (req, res) => {
 // Powers the Manager's Team Hours view - lets dispatchers with zero punch
 // sessions still show up as "Clocked Out" instead of only appearing once
 // they've punched in for the first time.
+// isActive: { $ne: false } (not { isActive: true }) deliberately - this is a
+// raw query filter, so it runs against the stored document, not a hydrated
+// one, meaning Mongoose's schema default(true) does NOT apply here. $ne:
+// false matches true AND "field missing" alike, so pre-existing dispatchers
+// that predate this field still show up as active.
 router.get("/dispatchers", requireAuth, requireRole("manager"), async (req, res) => {
   try {
     const dispatchers = await userModel
-      .find({ role: "dispatcher", companyId: req.user.companyId })
+      .find({ role: "dispatcher", companyId: req.user.companyId, isActive: { $ne: false } })
       .select("fullName email");
     res.json(dispatchers);
   } catch (err) {
     res.status(500).send({ message: "Could not retrieve dispatchers" });
+  }
+});
+
+// Manager-only, company-scoped removal. Soft-delete via isActive:false, not
+// a real delete - historical rides/work sessions attributed to this
+// dispatcher stay exactly as they are. Company scoping here is what makes
+// cross-company removal impossible: the query itself can never match a
+// dispatcher outside req.user.companyId, so there's nothing to leak either
+// way (a wrong id or a foreign-company id both just come back 404).
+router.patch("/dispatchers/:id/remove", requireAuth, requireRole("manager"), async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return res.status(400).send({ message: "Invalid dispatcher id" });
+  }
+
+  try {
+    const dispatcher = await userModel.findOne({ _id: req.params.id, companyId: req.user.companyId, role: "dispatcher" });
+    if (!dispatcher) return res.status(404).send({ message: "Dispatcher not found" });
+
+    if (!dispatcher.isActive) {
+      return res.status(409).send({ message: "This dispatcher has already been removed" });
+    }
+
+    dispatcher.isActive = false;
+    await dispatcher.save();
+
+    res.send({ message: "Dispatcher removed" });
+  } catch (err) {
+    res.status(500).send({ message: "Could not remove dispatcher" });
   }
 });
 
@@ -195,6 +224,12 @@ router.post("/dispatchers", requireAuth, requireRole("manager"), async (req, res
     const existingUser = await userModel.findOne({ email: data.email });
     if (existingUser) return res.status(409).send({ message: "An account with this email already exists" });
 
+    // The real, authoritative slug (see models/companyModel.js) - not
+    // derived from req.user.companyName, so it's always correct even if
+    // this manager's own companyName in the JWT is stale.
+    const company = await companyModel.findById(req.user.companyId).select("slug");
+    if (!company) return res.status(404).send({ message: "Company not found" });
+
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(data.password, salt);
 
@@ -206,6 +241,7 @@ router.post("/dispatchers", requireAuth, requireRole("manager"), async (req, res
       role: "dispatcher",
       companyId: req.user.companyId,
       companyName: req.user.companyName,
+      companySlug: company.slug,
     });
     const savedDispatcher = await newDispatcher.save();
 

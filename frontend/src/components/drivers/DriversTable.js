@@ -9,11 +9,13 @@ const STATUS_STYLES = {
   unavailable: "bg-rideflow-gray/60 text-rideflow-navy/70",
 };
 
-// Shared by the Dispatcher (read-only) and Manager (add) Drivers pages so the
-// stat cards and table never drift between the two. Only shows fields that
-// actually exist on the Driver model (name/phone/licenseNumber/status) -
-// no invented vehicle/email/ride-count data.
-const DriversTable = ({ drivers, onSelect, selectLabel = "View Details" }) => {
+// Shared by the Dispatcher (read-only) and Manager (add/delete) Drivers
+// pages so the stat cards and table never drift between the two. Only
+// shows fields that actually exist on the Driver model
+// (name/phone/licenseNumber/status) - no invented vehicle/email/ride-count
+// data. onRemove is optional; when provided (the Manager page), a Delete
+// action appears alongside View Details.
+const DriversTable = ({ drivers, onSelect, selectLabel = "View Details", onRemove, removingId }) => {
   const availableCount = drivers.filter((d) => d.status === "available").length;
   const assignedCount = drivers.filter((d) => d.status === "assigned").length;
 
@@ -60,13 +62,25 @@ const DriversTable = ({ drivers, onSelect, selectLabel = "View Details" }) => {
                     <td className="px-5 py-3 text-rideflow-navy">{driver.licenseNumber}</td>
                     <td className="px-5 py-3"><StatusBadge status={driver.status} styles={STATUS_STYLES} /></td>
                     <td className="px-5 py-3">
-                      <button
-                        type="button"
-                        onClick={() => onSelect && onSelect(driver)}
-                        className="text-rideflow-orange hover:text-rideflow-orange-hover font-semibold"
-                      >
-                        {selectLabel}
-                      </button>
+                      <div className="flex gap-3">
+                        <button
+                          type="button"
+                          onClick={() => onSelect && onSelect(driver)}
+                          className="text-rideflow-orange hover:text-rideflow-orange-hover font-semibold"
+                        >
+                          {selectLabel}
+                        </button>
+                        {onRemove && (
+                          <button
+                            type="button"
+                            onClick={() => onRemove(driver)}
+                            disabled={removingId === driver._id}
+                            className="text-red-600 hover:text-red-700 font-semibold disabled:opacity-50"
+                          >
+                            {removingId === driver._id ? "Deleting..." : "Delete"}
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

@@ -18,6 +18,18 @@ router.post('/login', async (req, res) => {
         const isPasswordValid = await bcrypt.compare(password, user.password)
         if (!isPasswordValid) return res.status(401).send({ message: "Email or password is incorrect" })
 
+        if (!user.isActive) {
+            return res.status(403).send({ message: "Your account has been deactivated. Contact your company manager." })
+        }
+
+        if (!user.isEmailVerified) {
+            return res.status(403).send({
+                message: "Please verify your email before logging in.",
+                requiresEmailVerification: true,
+                email: user.email,
+            })
+        }
+
         const accessToken = generateAccessToken(user)
         res.header('Authorization', accessToken).send({ accessToken })
     } catch (err) {

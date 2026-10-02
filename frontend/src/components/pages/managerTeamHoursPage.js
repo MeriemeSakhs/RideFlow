@@ -3,6 +3,7 @@ import axios from "axios";
 import { Clock, UserPlus } from "lucide-react";
 import PortalLayout from "../layout/PortalLayout";
 import Modal from "../ui/Modal";
+import ConfirmDialog from "../ui/ConfirmDialog";
 import WorkSessionHistoryTable from "../timeTracking/WorkSessionHistoryTable";
 import { MANAGER_NAV_ITEMS } from "../../portalConfig";
 import getUserInfo from "../../utilities/decodeJwt";
@@ -35,7 +36,7 @@ const rideStatsFor = (rides, dispatcherId) => {
   return {
     total: attributed.length,
     completed: attributed.filter((r) => r.status === "completed").length,
-    active: attributed.filter((r) => ["assigned", "in-progress"].includes(r.status)).length,
+    active: attributed.filter((r) => ["pending", "assigned", "in-progress"].includes(r.status)).length,
     cancelled: attributed.filter((r) => r.status === "cancelled").length,
   };
 };
@@ -54,6 +55,10 @@ const ManagerTeamHours = () => {
   const [dispatcherForm, setDispatcherForm] = useState(emptyDispatcherForm);
   const [addError, setAddError] = useState("");
   const [isSubmittingAdd, setIsSubmittingAdd] = useState(false);
+
+  const [removingId, setRemovingId] = useState(null);
+  const [removeError, setRemoveError] = useState("");
+  const [confirmTarget, setConfirmTarget] = useState(null);
 
   const fetchAll = useCallback(async () => {
     setIsLoading(true);
@@ -132,6 +137,32 @@ const ManagerTeamHours = () => {
     }
   };
 
+  // Clicking Remove only opens the confirmation dialog - nothing is
+  // removed until the dialog's own Delete button is explicitly clicked.
+  const handleRemoveDispatcher = (dispatcher, e) => {
+    e.stopPropagation();
+    setConfirmTarget(dispatcher);
+  };
+
+  const cancelRemoveDispatcher = () => setConfirmTarget(null);
+
+  const confirmRemoveDispatcher = async () => {
+    const dispatcher = confirmTarget;
+    setRemoveError("");
+    setRemovingId(dispatcher._id);
+    try {
+      await axios.patch(`${DISPATCHERS_URL}/${dispatcher._id}/remove`, {}, { headers: authHeader() });
+      if (selectedDispatcherId === dispatcher._id) setSelectedDispatcherId(null);
+      setConfirmTarget(null);
+      await fetchAll();
+    } catch (err) {
+      setRemoveError(errorMessageFrom(err, "Could not remove this dispatcher. Please try again."));
+      setConfirmTarget(null);
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
   const selectedDispatcher = dispatchers.find((d) => d._id === selectedDispatcherId);
   const selectedStats = selectedDispatcher ? statsFor(selectedDispatcher._id) : null;
   const selectedRideStats = selectedDispatcher ? rideStatsFor(rides, selectedDispatcher._id) : null;
@@ -155,6 +186,7 @@ const ManagerTeamHours = () => {
 
       {isLoading && <p className="text-rideflow-navy/60">Loading team hours...</p>}
       {!isLoading && error && <p className="text-red-600 text-sm mb-4">{error}</p>}
+      {!isLoading && removeError && <p className="text-red-600 text-sm mb-4">{removeError}</p>}
 
       {!isLoading && !error && (
         <div className="bg-white rounded-xl border border-black/5 overflow-hidden">
@@ -175,6 +207,7 @@ const ManagerTeamHours = () => {
                     <th className="px-5 py-2 font-semibold">Status</th>
                     <th className="px-5 py-2 font-semibold">Today</th>
                     <th className="px-5 py-2 font-semibold">This Week</th>
+                    <th className="px-5 py-2 font-semibold">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -200,6 +233,16 @@ const ManagerTeamHours = () => {
                         </td>
                         <td className="px-5 py-3 text-rideflow-navy">{formatHoursMinutes(stats.todayMinutes)}</td>
                         <td className="px-5 py-3 text-rideflow-navy">{formatHoursMinutes(stats.weekMinutes)}</td>
+                        <td className="px-5 py-3">
+                          <button
+                            type="button"
+                            onClick={(e) => handleRemoveDispatcher(dispatcher, e)}
+                            disabled={removingId === dispatcher._id}
+                            className="text-red-600 hover:text-red-700 font-semibold disabled:text-rideflow-navy/25 disabled:cursor-not-allowed"
+                          >
+                            {removingId === dispatcher._id ? "Removing..." : "Remove Dispatcher"}
+                          </button>
+                        </td>
                       </tr>
                     );
                   })}
@@ -317,6 +360,21 @@ const ManagerTeamHours = () => {
           </button>
         </form>
       </Modal>
+
+      <ConfirmDialog
+        open={!!confirmTarget}
+        title="Remove Dispatcher?"
+        message={
+          confirmTarget
+            ? `Are you sure you want to remove ${confirmTarget.fullName || "this dispatcher"}? They will immediately lose access to their RideFlow account. This action cannot be undone.`
+            : ""
+        }
+        confirmLabel="Remove"
+        confirmingLabel="Removing..."
+        isConfirming={removingId === confirmTarget?._id}
+        onConfirm={confirmRemoveDispatcher}
+        onCancel={cancelRemoveDispatcher}
+      />
     </PortalLayout>
   );
 };

@@ -26,9 +26,14 @@ const driverSchema = new mongoose.Schema(
       unique: true,
     },
 
+    // "removed" is a soft-delete, never a hard delete (see
+    // routes/driverRoutes.js's PATCH /:id/remove) - a driver can be
+    // referenced by historical rides (ride.assignedDriver), so deleting one
+    // just excludes them from the active driver list and new assignments;
+    // existing ride/driver history keeps resolving to a real document.
     status: {
       type: String,
-      enum: ["available", "assigned", "unavailable"],
+      enum: ["available", "assigned", "unavailable", "removed"],
       default: "available",
     },
   },

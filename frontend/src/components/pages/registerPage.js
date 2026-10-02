@@ -52,9 +52,8 @@ const Register = () => {
 
     setIsSubmitting(true);
     try {
-      await axios.post(url, formData);
-      window.alert("Registration successful! Please log in.");
-      navigate("/login");
+      const { data } = await axios.post(url, formData);
+      navigate("/verify-email", { state: { email: data.email, verificationSent: data.verificationSent } });
     } catch (error) {
       setError(errorMessageFrom(error, "Could not create your account. Please try again."));
     } finally {

@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Bell, LogOut, User, ChevronDown, Info } from "lucide-react";
 import RideFlowLogo from "../branding/RideFlowLogo";
 import RoleSwitcher from "./RoleSwitcher";
+import { portalPathFor } from "../../utilities/companyUrl";
 
 // Shared sidebar + top bar shell for both the Dispatcher and Manager portals.
 // navItems: [{ label, href, icon: LucideIcon }]
@@ -12,42 +13,112 @@ const PortalLayout = ({ portalTitle, portalSubtitle, navItems, user, children })
   const [switcherOpen, setSwitcherOpen] = useState(false);
 
   // "Current view" is derived from the URL, not a separate stored flag - a
-  // Manager on /dispatcher/* is in Dispatcher Mode, on /manager/* they're in
-  // Manager Mode. This makes it inherently refresh-safe and needs no state
-  // to keep in sync. The account's actual role (user.role) never changes.
-  // Falls back to the account's real role on neutral pages like /profile,
-  // so those never get mistaken for "viewing the Dispatcher portal".
-  const currentView = location.pathname.startsWith("/dispatcher")
+  // Manager on /dispatcher/* (or /<slug>/dispatcher/*) is in Dispatcher
+  // Mode, on /manager/* (or /<slug>/manager/*) they're in Manager Mode.
+  // This makes it inherently refresh-safe and needs no state to keep in
+  // sync. The account's actual role (user.role) never changes. Falls back
+  // to the account's real role on neutral pages like /profile, so those
+  // never get mistaken for "viewing the Dispatcher portal". The company
+  // slug prefix is stripped first so this check works under either URL form.
+  const pathWithoutSlug =
+    user?.companySlug && location.pathname.startsWith(`/${user.companySlug}/`)
+      ? location.pathname.slice(user.companySlug.length + 1)
+      : location.pathname;
+  const currentView = pathWithoutSlug.startsWith("/dispatcher")
     ? "dispatcher"
-    : location.pathname.startsWith("/manager")
+    : pathWithoutSlug.startsWith("/manager")
     ? "manager"
     : user?.role || "dispatcher";
   const isManagerViewingDispatcher = user?.role === "manager" && currentView === "dispatcher";
 
+  // Normalized to Title Case for display regardless of how it was actually
+  // typed at signup (a company whose real record is "AZROU TRANSPORTATION"
+  // or "azrou transportation" both render identically as "Azrou
+  // Transportation") - this is a display-only transform, the stored
+  // companyName itself is never modified.
+  const toTitleCase = (str) =>
+    str
+      .toLowerCase()
+      .split(" ")
+      .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
+      .join(" ");
+
+  // The company name is split into a prominent first word + a lighter
+  // secondary line for whatever follows, mirroring how a real wordmark
+  // treats a brand name vs. a descriptor (e.g. "Azrou" / "Transportation").
+  // This generalizes to any company name: a single-word name (e.g. "ABC")
+  // simply has no second line, and the first word's size backs off for
+  // unusually long single words so it never overflows the sidebar.
+  const companyNameWords = toTitleCase((user?.companyName || "").trim()).split(/\s+/).filter(Boolean);
+  const [companyFirstWord, ...companyRestWords] = companyNameWords;
+  const companyRestOfName = companyRestWords.join(" ");
+  const companyFirstWordSizeClass =
+    (companyFirstWord?.length || 0) > 11 ? "text-xl" : (companyFirstWord?.length || 0) > 7 ? "text-2xl" : "text-3xl";
+
   const handleLogout = () => {
     localStorage.removeItem("accessToken");
-    navigate("/login");
+    navigate(user?.companySlug ? `/${user.companySlug}/login` : "/login");
   };
 
   return (
     <div className="min-h-screen flex bg-rideflow-gray/30">
-      <aside className="w-64 shrink-0 bg-rideflow-navy text-white flex flex-col">
-        <div className="px-5 py-5 border-b border-white/10 flex flex-col items-center">
-          <RideFlowLogo variant="dark" size="sm" />
-          {user?.companyName && (
-            <p className="mt-1.5 max-w-[11rem] text-[11px] font-medium text-white/40 uppercase tracking-wide leading-tight text-center text-balance">
-              {user.companyName}
-            </p>
+      <aside className="w-64 shrink-0 bg-rideflow-navy text-white flex flex-col relative overflow-hidden">
+        {/* Very subtle curved road/motion lines - decorative only, kept to a
+            low opacity so they read as texture in the navy, not as shapes
+            competing with the branding or nav links above them. */}
+        <svg
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          viewBox="0 0 256 800"
+          preserveAspectRatio="xMidYMid slice"
+          aria-hidden="true"
+        >
+          <path d="M -30 760 C 70 640, 30 520, 150 430 C 240 360, 200 220, 300 120" stroke="white" strokeOpacity="0.05" strokeWidth="2" fill="none" />
+          <path d="M -50 620 C 50 520, 10 400, 120 320 C 210 260, 170 140, 270 60" stroke="white" strokeOpacity="0.035" strokeWidth="2" fill="none" />
+        </svg>
+
+        <div className="relative z-10 px-6 py-7 border-b border-white/10 flex flex-col items-center gap-2.5">
+          {/* Company name is the primary brand on this screen - always the
+              signed-in user's own company (user.companyName from the JWT),
+              shown in its own natural casing, never hardcoded or styled for
+              one specific company. Split into a bold first word + a lighter
+              secondary line (see companyFirstWord/companyRestOfName above) -
+              a single-word name just renders the first line alone. Not
+              uppercase+wide-tracked - that combination reads as a generic
+              section heading, not a brand name. */}
+          {companyFirstWord && (
+            <div className="flex flex-col items-center">
+              <span
+                className={`${companyFirstWordSizeClass} font-extrabold text-slate-300 leading-none tracking-tight text-center`}
+              >
+                {companyFirstWord}
+              </span>
+              {companyRestOfName && (
+                <span className="mt-1.5 text-base font-medium text-slate-400 leading-snug tracking-tight text-center text-balance max-w-[12rem]">
+                  {companyRestOfName}
+                </span>
+              )}
+            </div>
           )}
+
+          {companyFirstWord && (
+            <div className="flex items-center gap-2 w-full max-w-[9rem]" aria-hidden="true">
+              <span className="flex-1 h-px bg-white/15" />
+              <span className="w-5 h-[3px] rounded-full bg-rideflow-orange shrink-0" />
+              <span className="flex-1 h-px bg-white/15" />
+            </div>
+          )}
+
+          <RideFlowLogo variant="dark" size="sm" />
         </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        <nav className="relative z-10 flex-1 px-3 py-4 space-y-1">
           {navItems.map(({ label, href, icon: Icon }) => {
-            const isActive = location.pathname === href;
+            const slugAwareHref = user?.companySlug ? `/${user.companySlug}${href}` : href;
+            const isActive = location.pathname === slugAwareHref;
             return (
               <Link
                 key={href}
-                to={href}
+                to={slugAwareHref}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive
                     ? "bg-rideflow-orange text-white"
@@ -61,7 +132,7 @@ const PortalLayout = ({ portalTitle, portalSubtitle, navItems, user, children })
           })}
         </nav>
 
-        <div className="px-3 py-4 border-t border-white/10">
+        <div className="relative z-10 px-3 py-4 border-t border-white/10">
           <button
             type="button"
             onClick={handleLogout}
@@ -90,7 +161,7 @@ const PortalLayout = ({ portalTitle, portalSubtitle, navItems, user, children })
               <div className="text-sm">
                 <button
                   type="button"
-                  onClick={() => navigate("/profile")}
+                  onClick={() => navigate(user?.companySlug ? `/${user.companySlug}/profile` : "/profile")}
                   aria-label="Open my profile"
                   className="font-semibold text-rideflow-navy leading-tight hover:text-rideflow-orange transition-colors text-left"
                 >
@@ -114,7 +185,7 @@ const PortalLayout = ({ portalTitle, portalSubtitle, navItems, user, children })
               {switcherOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setSwitcherOpen(false)} />
-                  <RoleSwitcher currentView={currentView} onClose={() => setSwitcherOpen(false)} />
+                  <RoleSwitcher currentView={currentView} companySlug={user?.companySlug} onClose={() => setSwitcherOpen(false)} />
                 </>
               )}
             </div>
@@ -127,7 +198,7 @@ const PortalLayout = ({ portalTitle, portalSubtitle, navItems, user, children })
             <span>
               Account Role: <strong>Manager</strong> &middot; Currently viewing: <strong>Dispatcher Portal</strong>
             </span>
-            <Link to="/manager" className="ml-auto font-semibold text-amber-800 hover:text-amber-900 underline shrink-0">
+            <Link to={portalPathFor("manager", user?.companySlug)} className="ml-auto font-semibold text-amber-800 hover:text-amber-900 underline shrink-0">
               Switch back to Manager
             </Link>
           </div>

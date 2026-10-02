@@ -7,6 +7,7 @@ import TimeClockCard from "../timeTracking/TimeClockCard";
 import { DISPATCHER_NAV_ITEMS, MANAGER_NAV_ITEMS } from "../../portalConfig";
 import getUserInfo from "../../utilities/decodeJwt";
 import { authHeader, errorMessageFrom } from "../../utilities/api";
+import { portalPathFor } from "../../utilities/companyUrl";
 
 const BASE_URL = `${process.env.REACT_APP_BACKEND_SERVER_URI}/user`;
 
@@ -198,7 +199,7 @@ const ProfilePage = () => {
   if (!user) return null;
 
   const navItems = user.role === "manager" ? MANAGER_NAV_ITEMS : DISPATCHER_NAV_ITEMS;
-  const dashboardHref = user.role === "manager" ? "/manager" : "/dispatcher";
+  const dashboardHref = portalPathFor(user.role, user.companySlug);
 
   return (
     <PortalLayout portalTitle="My Profile" portalSubtitle="Manage your account information" navItems={navItems} user={user}>
