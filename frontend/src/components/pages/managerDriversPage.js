@@ -11,7 +11,7 @@ import { authHeader, errorMessageFrom } from "../../utilities/api";
 
 const DRIVERS_URL = `${process.env.REACT_APP_BACKEND_SERVER_URI}/driver`;
 const inputClass = "w-full px-4 py-2 rounded-md border border-rideflow-navy/20 text-rideflow-navy focus:outline-none focus:ring-2 focus:ring-rideflow-orange focus:border-rideflow-orange";
-const emptyDriverForm = { name: "", phone: "", licenseNumber: "" };
+const emptyDriverForm = { name: "", phone: "", licenseNumber: "", smsConsent: false };
 
 // Only Add + view exist here - there's no update-driver endpoint yet, so
 // selecting a driver shows their details rather than an edit form.
@@ -30,6 +30,9 @@ const ManagerDrivers = () => {
   const [removingId, setRemovingId] = useState(null);
   const [actionError, setActionError] = useState("");
   const [confirmTarget, setConfirmTarget] = useState(null);
+
+  const [consentSaving, setConsentSaving] = useState(false);
+  const [consentError, setConsentError] = useState("");
 
   const fetchDrivers = useCallback(async () => {
     setIsLoading(true);
@@ -51,7 +54,26 @@ const ManagerDrivers = () => {
   }, [fetchDrivers]);
 
   const handleChange = ({ currentTarget: input }) => {
-    setFormData((prev) => ({ ...prev, [input.name]: input.value }));
+    setFormData((prev) => ({ ...prev, [input.name]: input.type === "checkbox" ? input.checked : input.value }));
+  };
+
+  const selectDriver = (driver) => {
+    setConsentError("");
+    setSelectedDriver(driver);
+  };
+
+  const updateSmsConsent = async (smsConsent) => {
+    setConsentError("");
+    setConsentSaving(true);
+    try {
+      const { data } = await axios.patch(`${DRIVERS_URL}/${selectedDriver._id}/sms-consent`, { smsConsent }, { headers: authHeader() });
+      setSelectedDriver(data);
+      setDrivers((prev) => prev.map((d) => (d._id === data._id ? data : d)));
+    } catch (err) {
+      setConsentError(errorMessageFrom(err, "Could not update SMS consent. Please try again."));
+    } finally {
+      setConsentSaving(false);
+    }
   };
 
   const openAdd = () => {
@@ -121,7 +143,7 @@ const ManagerDrivers = () => {
       {!isLoading && listError && <p className="text-red-600 text-sm mb-4">{listError}</p>}
       {!isLoading && !listError && (
         <>
-          <DriversTable drivers={drivers} onSelect={setSelectedDriver} onRemove={handleRemove} removingId={removingId} />
+          <DriversTable drivers={drivers} onSelect={selectDriver} onRemove={handleRemove} removingId={removingId} />
           {actionError && <p className="text-red-600 text-xs mt-2">{actionError}</p>}
         </>
       )}
@@ -147,6 +169,23 @@ const ManagerDrivers = () => {
             <label className="block text-sm font-semibold text-rideflow-navy mb-1">License Number</label>
             <input type="text" name="licenseNumber" value={formData.licenseNumber} onChange={handleChange} className={inputClass} />
           </div>
+          <div className="rounded-lg border border-rideflow-navy/15 bg-rideflow-navy/[0.03] px-3 py-3">
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                name="smsConsent"
+                checked={formData.smsConsent}
+                onChange={handleChange}
+                className="mt-0.5 h-4 w-4 shrink-0 accent-rideflow-orange"
+              />
+              <span className="text-xs text-rideflow-navy/80 leading-relaxed">
+                <span className="font-semibold text-rideflow-navy">Optional:</span> The driver has agreed to receive ride assignment
+                text messages from RideFlow at this phone number, including new ride requests with a link to confirm or decline.
+                Message frequency varies based on ride activity. Message and data rates may apply. Reply HELP for help, STOP to opt out.
+                Consent is optional and is not required to add a driver.
+              </span>
+            </label>
+          </div>
           {formError && <p className="text-red-600 text-sm">{formError}</p>}
           <button
             type="submit"
@@ -165,6 +204,23 @@ const ManagerDrivers = () => {
             <p><span className="text-rideflow-navy/60">Phone:</span> {selectedDriver.phone}</p>
             <p><span className="text-rideflow-navy/60">License Number:</span> {selectedDriver.licenseNumber}</p>
             <p><span className="text-rideflow-navy/60">Status:</span> <span className="capitalize">{selectedDriver.status}</span></p>
+            <p>
+              <span className="text-rideflow-navy/60">SMS Notifications:</span>{" "}
+              {selectedDriver.smsConsent
+                ? `Opted in${selectedDriver.smsConsentAt ? ` on ${new Date(selectedDriver.smsConsentAt).toLocaleDateString()}` : ""}`
+                : "Not opted in (ride requests will not be texted)"}
+            </p>
+            {selectedDriver.status !== "removed" && (
+              <button
+                type="button"
+                disabled={consentSaving}
+                onClick={() => updateSmsConsent(!selectedDriver.smsConsent)}
+                className="mt-2 px-3 py-1.5 rounded-md border border-rideflow-navy/20 text-rideflow-navy text-xs font-semibold hover:bg-rideflow-navy/5 disabled:opacity-50"
+              >
+                {consentSaving ? "Saving..." : selectedDriver.smsConsent ? "Withdraw SMS consent" : "Record driver's SMS consent"}
+              </button>
+            )}
+            {consentError && <p className="text-red-600 text-xs">{consentError}</p>}
           </div>
         )}
       </Modal>
@@ -174,7 +230,7 @@ const ManagerDrivers = () => {
         title="Delete Driver?"
         message={
           confirmTarget
-            ? `Are you sure you want to delete ${confirmTarget.name}? They will no longer be assignable to new rides, but any ride history referencing them is unaffected. This action cannot be undone.`
+            ? `Are you sure you want to delete ${confirmTarget.name}? They will no longer be assignable to new rides, but any ride history referencing them is unaffected.`
             : ""
         }
         isConfirming={removingId === confirmTarget?._id}

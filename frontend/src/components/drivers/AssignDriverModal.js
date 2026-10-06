@@ -202,7 +202,9 @@ const AssignDriverModal = ({ ride, onClose, onAssigned }) => {
             <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5">
               <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
               <p className="text-sm text-amber-800">
-                The ride is pending, but the SMS notification could not be sent. Please contact the driver directly.
+                {result.smsStatus === "no_consent"
+                  ? "The ride is pending. This driver has not opted in to SMS notifications, so no text was sent. Please contact the driver directly."
+                  : "The ride is pending, but the SMS notification could not be sent. Please contact the driver directly."}
               </p>
             </div>
           )}

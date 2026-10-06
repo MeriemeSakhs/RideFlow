@@ -51,7 +51,7 @@ const sendAssignmentSms = async (ride, driver, confirmUrl) => {
     `Pickup: ${ride.pickupLocation}${pickupDate ? ` on ${pickupDate}` : ""}${pickupTime ? ` at ${pickupTime}` : ""}. ` +
     `Drop-off: ${ride.dropoffLocation}. ` +
     `Confirm or decline: ${confirmUrl} ` +
-    `Reply STOP to opt out.`;
+    `Reply HELP for help, STOP to opt out.`;
 
   await t.messages.create({
     body,

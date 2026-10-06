@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import getUserInfo from "../../utilities/decodeJwt";
 import PortalLayout from "../layout/PortalLayout";
 import StatusBadge from "../ui/StatusBadge";
@@ -52,6 +52,15 @@ const DispatcherRideRequests = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState(""); // "" = no filter, else "YYYY-MM-DD"
 
+  // A notification links here as e.g. /dispatcher/rides?highlight=<rideId> -
+  // see components/layout/NotificationBell.js's getNotificationDestination.
+  // Kept in the URL (not just component state) so a page refresh on the
+  // exact same link still re-highlights the same ride.
+  const [searchParams] = useSearchParams();
+  const highlightRideId = searchParams.get("highlight");
+  const [pulseRideId, setPulseRideId] = useState(highlightRideId);
+  const highlightedRowRef = useRef(null);
+
   const [editingRide, setEditingRide] = useState(null);
   const [formData, setFormData] = useState(emptyRideForm);
   const [formError, setFormError] = useState("");
@@ -81,6 +90,30 @@ const DispatcherRideRequests = () => {
     setUser(currentUser);
     if (currentUser && ["dispatcher", "manager"].includes(currentUser.role)) fetchRides();
   }, [fetchRides]);
+
+  // Arriving via a notification's ?highlight=<rideId> must always be able to
+  // see that ride, regardless of whatever status/date filter happened to be
+  // set - force both open once, on mount, rather than fighting a dispatcher
+  // who deliberately changes a filter afterward.
+  useEffect(() => {
+    if (highlightRideId) {
+      setStatusFilter("all");
+      setDateFilter("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Scrolls the highlighted row into view and lets the pulse fade on its
+  // own - the row stays identifiable via data-ride-id (for a refresh of the
+  // same link, or for tests) even after the visual pulse clears.
+  useEffect(() => {
+    if (!highlightRideId || isLoading) return;
+    if (highlightedRowRef.current) {
+      highlightedRowRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    const timeout = setTimeout(() => setPulseRideId(null), 3000);
+    return () => clearTimeout(timeout);
+  }, [highlightRideId, isLoading, rides]);
 
   const handleChange = ({ currentTarget: input }) => {
     setFormData((prev) => ({ ...prev, [input.name]: input.value }));
@@ -248,7 +281,14 @@ const DispatcherRideRequests = () => {
                 {visibleRides.map((ride) => {
                   const isFinal = !CANCELLABLE_STATUSES.includes(ride.status);
                   return (
-                    <tr key={ride._id} className="border-b border-black/5 last:border-0 align-top">
+                    <tr
+                      key={ride._id}
+                      ref={ride._id === highlightRideId ? highlightedRowRef : undefined}
+                      data-ride-id={ride._id}
+                      className={`border-b border-black/5 last:border-0 align-top transition-colors duration-700 ${
+                        pulseRideId === ride._id ? "bg-rideflow-orange/20" : ""
+                      }`}
+                    >
                       <td className="px-3 py-3 text-rideflow-navy font-medium"><WrapCell>{ride.passengerName}</WrapCell></td>
                       <td className="px-3 py-3 text-rideflow-navy"><AddressCell>{ride.pickupLocation}</AddressCell></td>
                       <td className="px-3 py-3 text-rideflow-navy"><AddressCell>{ride.dropoffLocation}</AddressCell></td>
@@ -341,7 +381,7 @@ const DispatcherRideRequests = () => {
         title="Cancel Ride?"
         message={
           confirmTarget
-            ? `Are you sure you want to cancel the ride for ${confirmTarget.passengerName}? This action cannot be undone.`
+            ? `Are you sure you want to cancel the ride for ${confirmTarget.passengerName}?`
             : ""
         }
         confirmLabel="Cancel Ride"

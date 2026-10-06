@@ -366,7 +366,7 @@ const ManagerTeamHours = () => {
         title="Remove Dispatcher?"
         message={
           confirmTarget
-            ? `Are you sure you want to remove ${confirmTarget.fullName || "this dispatcher"}? They will immediately lose access to their RideFlow account. This action cannot be undone.`
+            ? `Are you sure you want to remove ${confirmTarget.fullName || "this dispatcher"}? They will immediately lose access to their RideFlow account.`
             : ""
         }
         confirmLabel="Remove"

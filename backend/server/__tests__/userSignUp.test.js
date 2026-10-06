@@ -1,11 +1,14 @@
 const request = require('supertest');
-const { buildApp, connect, disconnect, clearDB } = require('./testSetup');
+const { buildApp, connect, disconnect, clearDB, mailer } = require('./testSetup');
 
 const app = buildApp();
 
 beforeAll(async () => { await connect(); });
 afterAll(async () => { await disconnect(); });
-beforeEach(async () => { await clearDB(); });
+beforeEach(async () => {
+    await clearDB();
+    mailer.sendSignupVerificationCode.mockClear();
+});
 
 const validUser = {
     fullName: 'Jane Dispatcher',
@@ -26,6 +29,29 @@ describe('POST /user/signup', () => {
         expect(res.body.role).toBe('dispatcher');
         expect(res.body.companyName).toBe(validUser.companyName);
         expect(res.body.companySlug).toBe('acme transport');
+    });
+
+    test('calls the verification-email function with the correct email, full name, and code - and never sends a real email', async () => {
+        const res = await request(app).post('/user/signup').send(validUser);
+        expect(res.status).toBe(201);
+
+        // The mailer is mocked (see testSetup.js) - this asserts the signup
+        // flow called it with the right arguments, without ever touching a
+        // real SMTP transport.
+        expect(mailer.sendSignupVerificationCode).toHaveBeenCalledTimes(1);
+        const [calledEmail, calledFullName, calledCode] = mailer.sendSignupVerificationCode.mock.calls[0];
+        expect(calledEmail).toBe(validUser.email);
+        expect(calledFullName).toBe(validUser.fullName);
+        expect(calledCode).toMatch(/^\d{6}$/);
+
+        // Cross-check against the real hashing function (not reimplemented
+        // here) that the code passed to the mailer is the SAME code the
+        // signup flow actually hashed and stored for verification - not
+        // just a plausible-looking value.
+        const { hashCode } = require('../utilities/verificationCode');
+        const userModel = require('../models/userModel');
+        const savedUser = await userModel.findOne({ email: validUser.email });
+        expect(savedUser.emailVerificationCodeHash).toBe(hashCode(calledCode));
     });
 
     test('registers a new manager successfully', async () => {

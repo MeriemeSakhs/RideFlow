@@ -371,7 +371,7 @@ const ManagerPricing = () => {
         title="Delete Pricing Rule?"
         message={
           confirmTarget
-            ? `Are you sure you want to delete the pricing for ${vehicleLabel(confirmTarget.vehicle)}? This removes both the point-to-point and hourly rates for this vehicle. This action cannot be undone.`
+            ? `Are you sure you want to delete the pricing for ${vehicleLabel(confirmTarget.vehicle)}? This removes both the point-to-point and hourly rates for this vehicle.`
             : ""
         }
         isConfirming={deletingVehicleId === confirmTarget?.vehicle._id}

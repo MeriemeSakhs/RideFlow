@@ -3,7 +3,7 @@ const router = express.Router();
 const mongoose = require("mongoose");
 const Driver = require("../models/driverModel");
 const Ride = require("../models/rideModel");
-const { driverCreateValidation } = require("../models/driverValidator");
+const { driverCreateValidation, driverSmsConsentValidation } = require("../models/driverValidator");
 const { requireAuth, requireRole } = require("../middleware/auth");
 const { BLOCKING_RIDE_STATUSES, hasScheduleConflict } = require("../utilities/driverSchedule");
 
@@ -93,7 +93,7 @@ router.post("/", requireAuth, requireRole("manager"), async (req, res) => {
     const existingDriver = await Driver.findOne({ licenseNumber: data.licenseNumber });
     if (existingDriver) return res.status(409).send({ message: "A driver with this license number already exists" });
 
-    const driver = new Driver({ ...data, companyId: req.user.companyId });
+    const driver = new Driver({ ...data, smsConsentAt: data.smsConsent ? new Date() : null, companyId: req.user.companyId });
     const savedDriver = await driver.save();
     res.status(201).json(savedDriver);
   } catch (err) {
@@ -121,6 +121,27 @@ router.patch("/:id/remove", requireAuth, requireRole("manager"), async (req, res
     res.json(driver);
   } catch (err) {
     res.status(500).send({ message: "Could not delete driver" });
+  }
+});
+
+// Manager-only - records or withdraws a driver's SMS opt-in (e.g. for
+// drivers added before consent was tracked, or a driver who asks to stop
+// receiving texts). Company-scoped, same as PATCH /:id/remove above.
+router.patch("/:id/sms-consent", requireAuth, requireRole("manager"), async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).send({ message: "Invalid driver id" });
+  const { success, data } = driverSmsConsentValidation(req.body);
+  if (!success) return res.status(400).send({ message: "smsConsent must be true or false" });
+
+  try {
+    const driver = await Driver.findOne({ _id: req.params.id, companyId: req.user.companyId });
+    if (!driver) return res.status(404).send({ message: "Driver not found" });
+
+    driver.smsConsent = data.smsConsent;
+    driver.smsConsentAt = data.smsConsent ? new Date() : null;
+    await driver.save();
+    res.json(driver);
+  } catch (err) {
+    res.status(500).send({ message: "Could not update SMS consent" });
   }
 });
 

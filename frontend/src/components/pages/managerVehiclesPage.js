@@ -263,7 +263,7 @@ const ManagerVehicles = () => {
         title="Delete Vehicle?"
         message={
           confirmTarget
-            ? `Are you sure you want to delete ${confirmTarget.make} ${confirmTarget.model} (${confirmTarget.licensePlate})? It will no longer be available for new pricing rules, but any ride or pricing history referencing it is unaffected. This action cannot be undone.`
+            ? `Are you sure you want to delete ${confirmTarget.make} ${confirmTarget.model} (${confirmTarget.licensePlate})? It will no longer be available for new pricing rules, but any ride or pricing history referencing it is unaffected.`
             : ""
         }
         isConfirming={removingId === confirmTarget?._id}

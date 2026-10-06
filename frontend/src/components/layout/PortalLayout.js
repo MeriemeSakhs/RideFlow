@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Bell, LogOut, User, ChevronDown, Info } from "lucide-react";
+import { LogOut, User, ChevronDown, Info } from "lucide-react";
 import RideFlowLogo from "../branding/RideFlowLogo";
 import RoleSwitcher from "./RoleSwitcher";
+import NotificationBell from "./NotificationBell";
 import { portalPathFor } from "../../utilities/companyUrl";
 
 // Shared sidebar + top bar shell for both the Dispatcher and Manager portals.
@@ -151,9 +152,7 @@ const PortalLayout = ({ portalTitle, portalSubtitle, navItems, user, children })
             <p className="text-sm text-rideflow-navy/60">{portalSubtitle}</p>
           </div>
           <div className="flex items-center gap-4">
-            <button type="button" className="text-rideflow-navy/40 hover:text-rideflow-navy" aria-label="Notifications">
-              <Bell size={20} />
-            </button>
+            <NotificationBell user={user} />
             <div className="relative flex items-center gap-2">
               <div className="w-9 h-9 rounded-full bg-rideflow-orange/10 flex items-center justify-center text-rideflow-orange">
                 <User size={18} />

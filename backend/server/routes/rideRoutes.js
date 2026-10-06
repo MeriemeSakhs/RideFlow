@@ -10,6 +10,7 @@ const { TOKEN_EXPIRY_MS, generateToken, hashToken } = require("../utilities/conf
 const { BLOCKING_RIDE_STATUSES, hasScheduleConflict } = require("../utilities/driverSchedule");
 const { geocodeAddress } = require("../utilities/geocoding");
 const { calculatePointToPoint, calculateHourly, pricingErrorResponse } = require("../utilities/pricingEngine");
+const { notify } = require("../utilities/notifier");
 const Vehicle = require("../models/vehiculeModel");
 
 const FINAL_STATUSES = ["completed", "cancelled"];
@@ -113,6 +114,12 @@ router.post("/", requireAuth, requireRole("dispatcher", "manager"), async (req, 
       }),
     });
     const savedRide = await ride.save();
+    await notify({
+      companyId: req.user.companyId,
+      type: "ride_requested",
+      message: `New ride request from ${savedRide.passengerName}`,
+      rideId: savedRide._id,
+    });
     res.status(201).json(savedRide);
   } catch (error) {
     res.status(400).json({ message: "Could not create ride request" });
@@ -299,7 +306,7 @@ router.patch("/:id/assign", requireAuth, requireRole("dispatcher", "manager"), a
         { new: true, session }
       ).populate("assignedDriver", ASSIGNED_DRIVER_FIELDS);
 
-      outcome = { status: 200, ride: updatedRide, token };
+      outcome = { status: 200, ride: updatedRide, token, smsConsent: driverDoc.smsConsent === true };
     });
   } catch (error) {
     session.endSession();
@@ -311,17 +318,30 @@ router.patch("/:id/assign", requireAuth, requireRole("dispatcher", "manager"), a
     return res.status(outcome.status).send(outcome.body);
   }
 
-  const { ride: updatedRide, token } = outcome;
+  const { ride: updatedRide, token, smsConsent } = outcome;
+
+  await notify({
+    companyId: req.user.companyId,
+    type: "ride_assigned",
+    message: `Ride for ${updatedRide.passengerName} offered to ${updatedRide.assignedDriver?.name || "a driver"}`,
+    rideId: updatedRide._id,
+  });
 
   // The offer is now durably saved (transaction committed). Everything from
   // here is best-effort - an SMS provider failure must never undo it.
+  // Drivers without a recorded SMS opt-in are never texted ("no_consent");
+  // the dispatcher contacts them directly instead.
   let smsStatus = "sent";
-  try {
-    const confirmUrl = `${FRONTEND_URL}/driver/confirm/${token}`;
-    await sendAssignmentSms(updatedRide, updatedRide.assignedDriver, confirmUrl);
-  } catch (smsErr) {
-    console.error("Failed to send driver assignment SMS:", smsErr.message);
-    smsStatus = "failed";
+  if (!smsConsent) {
+    smsStatus = "no_consent";
+  } else {
+    try {
+      const confirmUrl = `${FRONTEND_URL}/driver/confirm/${token}`;
+      await sendAssignmentSms(updatedRide, updatedRide.assignedDriver, confirmUrl);
+    } catch (smsErr) {
+      console.error("Failed to send driver assignment SMS:", smsErr.message);
+      smsStatus = "failed";
+    }
   }
 
   res.json({ ride: updatedRide, smsStatus });
@@ -383,6 +403,13 @@ router.post("/confirm/:token", async (req, res) => {
 
     if (!ride) return res.status(404).send({ message: "This confirmation link is invalid, expired, or already used" });
 
+    await notify({
+      companyId: ride.companyId,
+      type: "driver_confirmed",
+      message: `${ride.assignedDriver?.name || "The driver"} confirmed the ride for ${ride.passengerName}`,
+      rideId: ride._id,
+    });
+
     // Best-effort, same non-destructive pattern as the assignment SMS - a
     // geocoding failure must never undo the confirmation that already
     // succeeded. Only runs for whichever of pickup/dropoff DON'T already
@@ -439,6 +466,13 @@ router.post("/decline/:token", async (req, res) => {
     if (ride.assignedDriver) {
       await recomputeDriverStatusIfFree(ride.assignedDriver, ride.companyId, ride._id);
     }
+
+    await notify({
+      companyId: ride.companyId,
+      type: "driver_declined",
+      message: `The driver declined the ride for ${ride.passengerName}`,
+      rideId: ride._id,
+    });
 
     res.json({ message: "Ride declined." });
   } catch (error) {
@@ -548,6 +582,13 @@ router.post("/:id/finish/:sessionToken", async (req, res) => {
       await recomputeDriverStatusIfFree(ride.assignedDriver, ride.companyId, ride._id);
     }
 
+    await notify({
+      companyId: ride.companyId,
+      type: "ride_completed",
+      message: `Ride for ${ride.passengerName} completed`,
+      rideId: ride._id,
+    });
+
     res.json({ message: "Ride completed.", status: ride.status });
   } catch (error) {
     res.status(500).send({ message: "Could not complete this ride" });
@@ -583,6 +624,14 @@ router.patch("/:id/complete", requireAuth, requireRole("dispatcher", "manager"),
     existingRide.driverSessionTokenHash = null;
     existingRide.driverSessionTokenExpires = null;
     const completedRide = await existingRide.save();
+
+    await notify({
+      companyId: req.user.companyId,
+      type: "ride_completed",
+      message: `Ride for ${completedRide.passengerName} completed`,
+      rideId: completedRide._id,
+    });
+
     res.json(completedRide);
   } catch (error) {
     res.status(500).send({ message: "Could not complete ride" });
@@ -623,6 +672,14 @@ router.patch("/:id/cancel", requireAuth, requireRole("dispatcher", "manager"), a
     existingRide.driverSessionTokenHash = null;
     existingRide.driverSessionTokenExpires = null;
     const cancelledRide = await existingRide.save();
+
+    await notify({
+      companyId: req.user.companyId,
+      type: "ride_cancelled",
+      message: `Ride for ${cancelledRide.passengerName} was cancelled`,
+      rideId: cancelledRide._id,
+    });
+
     res.json(cancelledRide);
   } catch (error) {
     res.status(500).send({ message: "Could not cancel ride" });

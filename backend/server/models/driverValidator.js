@@ -10,8 +10,14 @@ const driverCreateValidation = data => {
     name: z.string().trim().min(1, 'Driver name is required').max(200, 'Driver name must be 200 characters or fewer'),
     phone: phoneField,
     licenseNumber: z.string().trim().min(1, 'License number is required').max(50, 'License number must be 50 characters or fewer'),
+    // Optional and off unless explicitly sent as true - SMS consent is
+    // never assumed (see driverModel.js's smsConsent).
+    smsConsent: z.boolean().optional().default(false),
   });
   return driverCreateSchema.safeParse(data)
 };
 
+const driverSmsConsentValidation = data => z.object({ smsConsent: z.boolean() }).safeParse(data)
+
 module.exports.driverCreateValidation = driverCreateValidation;
+module.exports.driverSmsConsentValidation = driverSmsConsentValidation;

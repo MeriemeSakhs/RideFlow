@@ -26,6 +26,20 @@ const driverSchema = new mongoose.Schema(
       unique: true,
     },
 
+    // Express SMS opt-in for ride assignment texts (see
+    // utilities/smsNotifier.js). Defaults to false - a driver is never
+    // texted until a manager records that the driver agreed, and existing
+    // drivers without this field are treated as not consented.
+    smsConsent: {
+      type: Boolean,
+      default: false,
+    },
+
+    smsConsentAt: {
+      type: Date,
+      default: null,
+    },
+
     // "removed" is a soft-delete, never a hard delete (see
     // routes/driverRoutes.js's PATCH /:id/remove) - a driver can be
     // referenced by historical rides (ride.assignedDriver), so deleting one
